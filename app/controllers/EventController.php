@@ -102,7 +102,47 @@ class EventController extends BaseController {
         $this->view('eventos/edit', ['evento' => $evento]);
     }
     
-    public function delete($id) {
+    public function changeStatus($id) {
+        $this->requireAuth();
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['error' => 'Método no permitido'], 405);
+        }
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        $newStatus = $input['estado'] ?? '';
+        
+        $validStatuses = ['borrador', 'publicado', 'cerrado', 'cancelado'];
+        if (!in_array($newStatus, $validStatuses)) {
+            $this->json(['error' => 'Estado inválido'], 400);
+        }
+        
+        $evento = $this->db->fetch("SELECT * FROM eventos WHERE id = ?", [$id]);
+        
+        if (!$evento) {
+            $this->json(['error' => 'Evento no encontrado'], 404);
+        }
+        
+        // Verificar permisos
+        if ($_SESSION['user_role'] === 'gestor' && $evento['usuario_id'] != $_SESSION['user_id']) {
+            $this->json(['error' => 'No tienes permisos para modificar este evento'], 403);
+        }
+        
+        // Actualizar estado
+        $this->db->query(
+            "UPDATE eventos SET estado = ?, updated_at = NOW() WHERE id = ?",
+            [$newStatus, $id]
+        );
+        
+        $this->logActivity(
+            'cambiar_estado_evento', 
+            "Estado del evento '{$evento['titulo']}' cambiado a '{$newStatus}'", 
+            'eventos', 
+            $id
+        );
+        
+        $this->json(['success' => true]);
+    }
         $this->requireAuth();
         
         $evento = $this->db->fetch(

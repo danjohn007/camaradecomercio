@@ -34,15 +34,47 @@ class PublicController extends BaseController {
     }
     
     public function companyRegistration($slug) {
-        // Placeholder - implementar registro de empresas
+        // Obtener evento por slug
+        $evento = $this->db->fetch(
+            "SELECT * FROM eventos WHERE slug = ? AND estado = 'publicado'",
+            [$slug]
+        );
+        
+        if (!$evento) {
+            $this->redirect('404');
+        }
+        
+        // Verificar que el evento permita empresas
+        if ($evento['tipo_publico'] === 'invitados') {
+            $_SESSION['error'] = 'Este evento es solo para invitados generales';
+            $this->redirect('evento/' . $slug);
+        }
+        
         $this->view('public/company-registration', [
+            'evento' => $evento,
             'eventSlug' => $slug
         ]);
     }
     
     public function guestRegistration($slug) {
-        // Placeholder - implementar registro de invitados
+        // Obtener evento por slug
+        $evento = $this->db->fetch(
+            "SELECT * FROM eventos WHERE slug = ? AND estado = 'publicado'",
+            [$slug]
+        );
+        
+        if (!$evento) {
+            $this->redirect('404');
+        }
+        
+        // Verificar que el evento permita invitados
+        if ($evento['tipo_publico'] === 'empresas') {
+            $_SESSION['error'] = 'Este evento es solo para empresas';
+            $this->redirect('evento/' . $slug);
+        }
+        
         $this->view('public/guest-registration', [
+            'evento' => $evento,
             'eventSlug' => $slug
         ]);
     }
