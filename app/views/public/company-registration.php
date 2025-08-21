@@ -182,23 +182,11 @@ $rfc = $_GET['rfc'] ?? '';
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const rfcInput = document.getElementById('rfc');
-    const eventSlug = rfcInput.dataset.eventSlug;
-    
-    // Auto-buscar datos cuando se ingrese el RFC
-    let timeout;
-    rfcInput.addEventListener('input', function() {
-        this.value = this.value.toUpperCase();
-        
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-            if (this.value.length >= 12 && CANACO.validation.validateRFC(this.value)) {
-                CANACO.registration.searchByRFC(this.value, eventSlug);
-            }
-        }, 500);
-    });
+    // Note: RFC search is handled globally by app.js
+    // Just setup form-specific validations here
     
     // Validación de RFC en tiempo real
+    const rfcInput = document.getElementById('rfc');
     rfcInput.addEventListener('blur', function() {
         if (this.value && !CANACO.validation.validateRFC(this.value)) {
             this.classList.add('is-invalid');

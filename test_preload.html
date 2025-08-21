@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="base-url" content="/reservaciones/">
+    <title>Test Preload Functionality</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .log-area {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Test Data Preload Functionality</h1>
+        
+        <!-- RFC Search Test -->
+        <div class="test-section">
+            <h3>Test RFC Search (Company)</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="rfc" class="form-label">RFC</label>
+                    <input type="text" class="form-control" id="rfc" 
+                           data-event-slug="test-event"
+                           placeholder="Ingrese RFC (ej: RARD7909214H6)">
+                </div>
+                <div class="col-md-6">
+                    <label for="razon_social" class="form-label">Razón Social</label>
+                    <input type="text" class="form-control" id="razon_social" readonly>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-6">
+                    <label for="nombre_comercial" class="form-label">Nombre Comercial</label>
+                    <input type="text" class="form-control" id="nombre_comercial" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label for="giro_comercial" class="form-label">Giro Comercial</label>
+                    <input type="text" class="form-control" id="giro_comercial" readonly>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-6">
+                    <label for="nombre_completo" class="form-label">Representante</label>
+                    <input type="text" class="form-control" id="nombre_completo" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="text" class="form-control" id="email" readonly>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Phone Search Test -->
+        <div class="test-section">
+            <h3>Test Phone Search (Guest)</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="telefono" class="form-label">Teléfono</label>
+                    <input type="tel" class="form-control" id="telefono" 
+                           data-event-slug="test-event"
+                           placeholder="Ingrese teléfono (ej: 4424865389)">
+                </div>
+                <div class="col-md-6">
+                    <label for="guest_nombre" class="form-label">Nombre Completo</label>
+                    <input type="text" class="form-control" id="guest_nombre" readonly>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-6">
+                    <label for="guest_email" class="form-label">Email</label>
+                    <input type="text" class="form-control" id="guest_email" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label for="ocupacion" class="form-label">Ocupación</label>
+                    <input type="text" class="form-control" id="ocupacion" readonly>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Log Area -->
+        <div class="test-section">
+            <h3>Console Log</h3>
+            <div id="log-area" class="log-area">
+                <p>Console messages will appear here...</p>
+            </div>
+            <button class="btn btn-secondary mt-2" onclick="clearLog()">Clear Log</button>
+        </div>
+        
+        <!-- Test Instructions -->
+        <div class="test-section">
+            <h3>Test Instructions</h3>
+            <ol>
+                <li>Make sure the database has the test data (run test_data.sql)</li>
+                <li>Try entering RFC: <strong>RARD7909214H6</strong> in the RFC field</li>
+                <li>Try entering phone: <strong>4424865389</strong> in the phone field</li>
+                <li>Check the console log for any errors</li>
+                <li>Verify that fields are automatically filled when data is found</li>
+            </ol>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Modified app.js for testing -->
+    <script>
+        // Override console.log to also display in our log area
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        function addToLog(message, type = 'info') {
+            const logArea = document.getElementById('log-area');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span style="color: #666">[${timestamp}]</span> <span style="color: ${type === 'error' ? 'red' : 'blue'}">${message}</span>`;
+            logArea.appendChild(logEntry);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToLog(args.join(' '), 'info');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToLog(args.join(' '), 'error');
+        };
+        
+        function clearLog() {
+            document.getElementById('log-area').innerHTML = '<p>Console cleared...</p>';
+        }
+        
+        // CANACO object for testing
+        const CANACO = {
+            baseUrl: document.querySelector('meta[name="base-url"]')?.getAttribute('content') || '/',
+            
+            utils: {
+                showAlert: function(message, type = 'info') {
+                    console.log(`ALERT [${type}]: ${message}`);
+                    // Also show as browser alert for testing
+                    alert(`[${type.toUpperCase()}] ${message}`);
+                }
+            },
+            
+            registration: {
+                searchByRFC: function(rfc, eventSlug) {
+                    if (rfc.length < 12) return;
+                    
+                    console.log('Searching for RFC:', rfc, 'Event slug:', eventSlug);
+                    
+                    const rfcInput = document.getElementById('rfc');
+                    if (!rfcInput) {
+                        console.error('RFC input element not found');
+                        return;
+                    }
+                    
+                    const originalPlaceholder = rfcInput.placeholder;
+                    rfcInput.placeholder = 'Buscando datos...';
+                    rfcInput.disabled = true;
+                    
+                    const apiUrl = `${CANACO.baseUrl}api/buscar-empresa`;
+                    console.log('API URL:', apiUrl);
+                    
+                    fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ rfc: rfc })
+                    })
+                    .then(response => {
+                        console.log('Response status:', response.status);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('API response:', JSON.stringify(data, null, 2));
+                        if (data.found) {
+                            // Pre-llenar formulario con datos existentes
+                            if (data.empresa) {
+                                if (document.getElementById('razon_social')) document.getElementById('razon_social').value = data.empresa.razon_social || '';
+                                if (document.getElementById('nombre_comercial')) document.getElementById('nombre_comercial').value = data.empresa.nombre_comercial || '';
+                                if (document.getElementById('giro_comercial')) document.getElementById('giro_comercial').value = data.empresa.giro_comercial || '';
+                            }
+                            
+                            if (data.representante) {
+                                if (document.getElementById('nombre_completo')) document.getElementById('nombre_completo').value = data.representante.nombre_completo || '';
+                                if (document.getElementById('email')) document.getElementById('email').value = data.representante.email || '';
+                            }
+                            
+                            CANACO.utils.showAlert('✓ Datos encontrados y pre-cargados desde registros anteriores', 'success');
+                        } else if (rfc.length >= 12) {
+                            CANACO.utils.showAlert('ℹ RFC no encontrado en registros anteriores. Puedes continuar con el registro.', 'info');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al buscar empresa:', error);
+                        CANACO.utils.showAlert('Error de conexión al buscar datos. Intenta nuevamente.', 'warning');
+                    })
+                    .finally(() => {
+                        rfcInput.placeholder = originalPlaceholder;
+                        rfcInput.disabled = false;
+                    });
+                },
+                
+                searchByPhone: function(telefono, eventSlug) {
+                    if (telefono.length < 10) return;
+                    
+                    console.log('Searching for phone:', telefono, 'Event slug:', eventSlug);
+                    
+                    const phoneInput = document.getElementById('telefono');
+                    if (!phoneInput) {
+                        console.error('Phone input element not found');
+                        return;
+                    }
+                    
+                    const originalPlaceholder = phoneInput.placeholder;
+                    phoneInput.placeholder = 'Buscando datos...';
+                    phoneInput.disabled = true;
+                    
+                    const apiUrl = `${CANACO.baseUrl}api/buscar-invitado`;
+                    console.log('API URL:', apiUrl);
+                    
+                    fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ telefono: telefono })
+                    })
+                    .then(response => {
+                        console.log('Response status:', response.status);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('API response:', JSON.stringify(data, null, 2));
+                        if (data.found && data.invitado) {
+                            // Pre-llenar formulario con datos existentes
+                            if (document.getElementById('guest_nombre')) document.getElementById('guest_nombre').value = data.invitado.nombre_completo || '';
+                            if (document.getElementById('guest_email')) document.getElementById('guest_email').value = data.invitado.email || '';
+                            if (document.getElementById('ocupacion')) document.getElementById('ocupacion').value = data.invitado.ocupacion || '';
+                            
+                            CANACO.utils.showAlert('✓ Datos encontrados y pre-cargados desde registros anteriores', 'success');
+                        } else if (telefono.length >= 10) {
+                            CANACO.utils.showAlert('ℹ Teléfono no encontrado en registros anteriores. Puedes continuar con el registro.', 'info');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al buscar invitado:', error);
+                        CANACO.utils.showAlert('Error de conexión al buscar datos. Intenta nuevamente.', 'warning');
+                    })
+                    .finally(() => {
+                        phoneInput.placeholder = originalPlaceholder;
+                        phoneInput.disabled = false;
+                    });
+                }
+            },
+            
+            validation: {
+                validateRFC: function(rfc) {
+                    const rfcPattern = /^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$/;
+                    return rfcPattern.test(rfc.toUpperCase());
+                },
+                
+                validatePhone: function(phone) {
+                    const phonePattern = /^[0-9]{10}$/;
+                    return phonePattern.test(phone.replace(/\D/g, ''));
+                }
+            }
+        };
+        
+        // Setup event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Test page loaded, setting up event listeners...');
+            
+            const rfcInput = document.getElementById('rfc');
+            if (rfcInput) {
+                let timeout;
+                rfcInput.addEventListener('input', function() {
+                    this.value = this.value.toUpperCase();
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => {
+                        const eventSlug = this.dataset.eventSlug;
+                        if (this.value.length >= 12 && CANACO.validation.validateRFC(this.value)) {
+                            CANACO.registration.searchByRFC(this.value, eventSlug);
+                        }
+                    }, 500);
+                });
+            }
+            
+            const phoneInput = document.getElementById('telefono');
+            if (phoneInput) {
+                let timeout;
+                phoneInput.addEventListener('input', function() {
+                    this.value = this.value.replace(/\D/g, '');
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => {
+                        const eventSlug = this.dataset.eventSlug;
+                        if (this.value.length >= 10 && CANACO.validation.validatePhone(this.value)) {
+                            CANACO.registration.searchByPhone(this.value, eventSlug);
+                        }
+                    }, 500);
+                });
+            }
+            
+            console.log('Event listeners attached successfully');
+        });
+    </script>
+</body>
+</html>

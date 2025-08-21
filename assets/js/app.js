@@ -125,21 +125,38 @@ const CANACO = {
         searchByRFC: function(rfc, eventSlug) {
             if (rfc.length < 12) return;
             
+            console.log('Searching for RFC:', rfc, 'Event slug:', eventSlug);
+            
             // Mostrar indicador de carga
             const rfcInput = document.getElementById('rfc');
+            if (!rfcInput) {
+                console.error('RFC input element not found');
+                return;
+            }
+            
             const originalPlaceholder = rfcInput.placeholder;
             rfcInput.placeholder = 'Buscando datos...';
             rfcInput.disabled = true;
             
-            fetch(`${CANACO.baseUrl}api/buscar-empresa`, {
+            const apiUrl = `${CANACO.baseUrl}api/buscar-empresa`;
+            console.log('API URL:', apiUrl);
+            
+            fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ rfc: rfc })
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('API response:', data);
                 if (data.found) {
                     // Pre-llenar formulario con datos existentes
                     if (data.empresa) {
@@ -177,21 +194,38 @@ const CANACO = {
         searchByPhone: function(telefono, eventSlug) {
             if (telefono.length < 10) return;
             
+            console.log('Searching for phone:', telefono, 'Event slug:', eventSlug);
+            
             // Mostrar indicador de carga
             const phoneInput = document.getElementById('telefono');
+            if (!phoneInput) {
+                console.error('Phone input element not found');
+                return;
+            }
+            
             const originalPlaceholder = phoneInput.placeholder;
             phoneInput.placeholder = 'Buscando datos...';
             phoneInput.disabled = true;
             
-            fetch(`${CANACO.baseUrl}api/buscar-invitado`, {
+            const apiUrl = `${CANACO.baseUrl}api/buscar-invitado`;
+            console.log('API URL:', apiUrl);
+            
+            fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ telefono: telefono })
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('API response:', data);
                 if (data.found && data.invitado) {
                     // Pre-llenar formulario con datos existentes
                     if (document.getElementById('nombre_completo')) document.getElementById('nombre_completo').value = data.invitado.nombre_completo || '';
@@ -312,15 +346,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Auto-search functionality
+    // Auto-search functionality - only add if not already handled by page-specific scripts
     const rfcSearchInput = document.getElementById('rfc');
-    if (rfcSearchInput) {
+    if (rfcSearchInput && !rfcSearchInput.hasAttribute('data-search-attached')) {
+        rfcSearchInput.setAttribute('data-search-attached', 'true');
         let timeout;
         rfcSearchInput.addEventListener('input', function() {
             clearTimeout(timeout);
             timeout = setTimeout(() => {
                 const eventSlug = this.dataset.eventSlug;
-                if (this.value.length >= 12) {
+                if (this.value.length >= 12 && CANACO.validation.validateRFC(this.value)) {
                     CANACO.registration.searchByRFC(this.value, eventSlug);
                 }
             }, 500);
@@ -328,13 +363,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     const phoneSearchInput = document.getElementById('telefono');
-    if (phoneSearchInput && phoneSearchInput.dataset.eventSlug) {
+    if (phoneSearchInput && phoneSearchInput.dataset.eventSlug && !phoneSearchInput.hasAttribute('data-search-attached')) {
+        phoneSearchInput.setAttribute('data-search-attached', 'true');
         let timeout;
         phoneSearchInput.addEventListener('input', function() {
             clearTimeout(timeout);
             timeout = setTimeout(() => {
                 const eventSlug = this.dataset.eventSlug;
-                if (this.value.length >= 10) {
+                if (this.value.length >= 10 && CANACO.validation.validatePhone(this.value)) {
                     CANACO.registration.searchByPhone(this.value, eventSlug);
                 }
             }, 500);

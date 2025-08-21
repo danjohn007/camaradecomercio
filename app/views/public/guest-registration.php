@@ -185,24 +185,11 @@ $telefono = $_GET['telefono'] ?? '';
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const telefonoInput = document.getElementById('telefono');
-    const eventSlug = telefonoInput.dataset.eventSlug;
-    
-    // Auto-buscar datos cuando se ingrese el teléfono
-    let timeout;
-    telefonoInput.addEventListener('input', function() {
-        // Solo números
-        this.value = this.value.replace(/\D/g, '');
-        
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-            if (this.value.length >= 10 && CANACO.validation.validatePhone(this.value)) {
-                CANACO.registration.searchByPhone(this.value, eventSlug);
-            }
-        }, 500);
-    });
+    // Note: Phone search is handled globally by app.js
+    // Just setup form-specific validations here
     
     // Validación de teléfono en tiempo real
+    const telefonoInput = document.getElementById('telefono');
     telefonoInput.addEventListener('blur', function() {
         if (this.value && !CANACO.validation.validatePhone(this.value)) {
             this.classList.add('is-invalid');

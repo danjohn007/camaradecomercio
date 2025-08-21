@@ -11,32 +11,37 @@ class ApiController extends BaseController {
         }
         
         $input = json_decode(file_get_contents('php://input'), true);
-        $rfc = $input['rfc'] ?? '';
+        $rfc = trim($input['rfc'] ?? '');
         
         if (empty($rfc)) {
             $this->json(['error' => 'RFC requerido'], 400);
         }
         
-        // Buscar empresa por RFC
-        $empresa = $this->db->fetch(
-            "SELECT * FROM empresas WHERE rfc = ?",
-            [$rfc]
-        );
-        
-        if ($empresa) {
-            // Buscar representante principal
-            $representante = $this->db->fetch(
-                "SELECT * FROM representantes WHERE empresa_id = ? AND es_contacto_principal = 1",
-                [$empresa['id']]
+        try {
+            // Buscar empresa por RFC (case insensitive)
+            $empresa = $this->db->fetch(
+                "SELECT * FROM empresas WHERE UPPER(rfc) = UPPER(?)",
+                [$rfc]
             );
             
-            $this->json([
-                'found' => true,
-                'empresa' => $empresa,
-                'representante' => $representante
-            ]);
-        } else {
-            $this->json(['found' => false]);
+            if ($empresa) {
+                // Buscar representante principal
+                $representante = $this->db->fetch(
+                    "SELECT * FROM representantes WHERE empresa_id = ? AND es_contacto_principal = 1",
+                    [$empresa['id']]
+                );
+                
+                $this->json([
+                    'found' => true,
+                    'empresa' => $empresa,
+                    'representante' => $representante
+                ]);
+            } else {
+                $this->json(['found' => false]);
+            }
+        } catch (Exception $e) {
+            error_log("Error en buscarEmpresa: " . $e->getMessage());
+            $this->json(['error' => 'Error interno del servidor'], 500);
         }
     }
     
@@ -46,25 +51,32 @@ class ApiController extends BaseController {
         }
         
         $input = json_decode(file_get_contents('php://input'), true);
-        $telefono = $input['telefono'] ?? '';
+        $telefono = trim($input['telefono'] ?? '');
         
         if (empty($telefono)) {
             $this->json(['error' => 'Teléfono requerido'], 400);
         }
         
-        // Buscar invitado por teléfono
-        $invitado = $this->db->fetch(
-            "SELECT * FROM invitados WHERE telefono = ?",
-            [$telefono]
-        );
-        
-        if ($invitado) {
-            $this->json([
-                'found' => true,
-                'invitado' => $invitado
-            ]);
-        } else {
-            $this->json(['found' => false]);
+        try {
+            // Buscar invitado por teléfono (exact match and clean numbers)
+            $telefonoClean = preg_replace('/\D/', '', $telefono); // Remove non-digits
+            
+            $invitado = $this->db->fetch(
+                "SELECT * FROM invitados WHERE telefono = ? OR REPLACE(REPLACE(REPLACE(telefono, '-', ''), ' ', ''), '(', '') = ?",
+                [$telefono, $telefonoClean]
+            );
+            
+            if ($invitado) {
+                $this->json([
+                    'found' => true,
+                    'invitado' => $invitado
+                ]);
+            } else {
+                $this->json(['found' => false]);
+            }
+        } catch (Exception $e) {
+            error_log("Error en buscarInvitado: " . $e->getMessage());
+            $this->json(['error' => 'Error interno del servidor'], 500);
         }
     }
     
