@@ -141,10 +141,20 @@ $rfc = $_GET['rfc'] ?? '';
                                 
                                 <div class="col-12">
                                     <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="consejero_camara" 
+                                               name="consejero_camara">
+                                        <label class="form-check-label" for="consejero_camara">
+                                            Soy consejero a la Cámara de Comercio de Querétaro
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="acepta_terminos" 
                                                name="acepta_terminos" required>
                                         <label class="form-check-label" for="acepta_terminos">
-                                            Soy consejero a la Cámara de Comercio de Querétaro
+                                            Acepto los términos y condiciones del sistema
                                         </label>
                                     </div>
                                 </div>

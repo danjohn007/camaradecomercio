@@ -35,11 +35,16 @@ $router->add('qr', 'QrController@index');
 $router->add('qr/validar', 'QrController@validate');
 $router->add('qr/historial', 'QrController@history');
 $router->add('qr/stats', 'QrController@stats');
+$router->add('perfil', 'ProfileController@index');
+$router->add('perfil/editar', 'ProfileController@edit');
+$router->add('configuracion', 'ProfileController@settings');
+$router->add('configuracion/password', 'ProfileController@changePassword');
 
 // Rutas públicas para registro de eventos
 $router->add('evento/([a-zA-Z0-9\-]+)', 'PublicController@eventPage');
 $router->add('registro/empresa/([a-zA-Z0-9\-]+)', 'PublicController@companyRegistration');
 $router->add('registro/invitado/([a-zA-Z0-9\-]+)', 'PublicController@guestRegistration');
+$router->add('registro/confirmacion/([a-zA-Z0-9\-]+)', 'PublicController@confirmation');
 
 // Rutas API
 $router->add('api/buscar-empresa', 'ApiController@buscarEmpresa');
