@@ -140,7 +140,8 @@ class AttendeeController extends BaseController {
             'page' => $page,
             'totalPages' => $totalPages,
             'total' => $total,
-            'perPage' => $perPage
+            'perPage' => $perPage,
+            'pageTitle' => 'Asistentes'
         ]);
     }
     
