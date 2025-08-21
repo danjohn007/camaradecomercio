@@ -1,5 +1,6 @@
 <?php 
 $pageTitle = 'Asistentes'; 
+$hideSidebar = true; // Hide main sidebar to avoid duplication
 include 'app/views/layouts/header.php'; 
 ?>
 

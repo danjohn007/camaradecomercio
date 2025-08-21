@@ -1,5 +1,6 @@
 <?php 
 $pageTitle = 'Editar Perfil'; 
+$hideSidebar = true; // Hide main sidebar for profile pages
 include 'app/views/layouts/header.php'; 
 ?>
 
