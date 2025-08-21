@@ -8,7 +8,9 @@ class QrController extends BaseController {
     public function index() {
         $this->requireAuth();
         
-        $this->view('qr/index');
+        $this->view('qr/index', [
+            'pageTitle' => 'Validación QR'
+        ]);
     }
     
     public function validate() {

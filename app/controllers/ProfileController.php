@@ -20,7 +20,9 @@ class ProfileController extends BaseController {
         }
         
         $this->view('profile/index', [
-            'usuario' => $usuario
+            'usuario' => $usuario,
+            'pageTitle' => 'Mi Perfil',
+            'hideSidebar' => true
         ]);
     }
     
@@ -43,7 +45,9 @@ class ProfileController extends BaseController {
         }
         
         $this->view('profile/edit', [
-            'usuario' => $usuario
+            'usuario' => $usuario,
+            'pageTitle' => 'Editar Perfil',
+            'hideSidebar' => true
         ]);
     }
     
@@ -63,7 +67,9 @@ class ProfileController extends BaseController {
         }
         
         $this->view('profile/settings', [
-            'configuraciones' => $configuraciones
+            'configuraciones' => $configuraciones,
+            'pageTitle' => 'Configuración',
+            'hideSidebar' => true
         ]);
     }
     
@@ -74,7 +80,10 @@ class ProfileController extends BaseController {
             $this->processPasswordChange();
         }
         
-        $this->view('profile/change-password');
+        $this->view('profile/change-password', [
+            'pageTitle' => 'Cambiar Contraseña',
+            'hideSidebar' => true
+        ]);
     }
     
     private function processProfileUpdate() {

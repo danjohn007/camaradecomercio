@@ -1,9 +1,3 @@
-<?php 
-$pageTitle = 'Editar Perfil'; 
-$hideSidebar = true; // Hide main sidebar for profile pages
-include 'app/views/layouts/header.php'; 
-?>
-
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2"><i class="fas fa-edit me-2"></i>Editar Perfil</h1>
         <a href="<?php echo BASE_URL; ?>perfil" class="btn btn-outline-secondary">
@@ -148,5 +142,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-
-<?php include 'app/views/layouts/footer.php'; ?>

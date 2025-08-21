@@ -1,9 +1,3 @@
-<?php 
-$pageTitle = 'Mi Perfil'; 
-$hideSidebar = true; // Hide main sidebar for profile pages
-include 'app/views/layouts/header.php'; 
-?>
-
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2"><i class="fas fa-user me-2"></i>Mi Perfil</h1>
     </div>
@@ -112,5 +106,3 @@ include 'app/views/layouts/header.php';
             </div>
         </div>
     </div>
-
-<?php include 'app/views/layouts/footer.php'; ?>
