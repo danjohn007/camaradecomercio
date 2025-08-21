@@ -127,6 +127,8 @@ const CANACO = {
             
             // Mostrar indicador de carga
             const rfcInput = document.getElementById('rfc');
+            if (!rfcInput) return; // Exit if input not found
+            
             const originalPlaceholder = rfcInput.placeholder;
             rfcInput.placeholder = 'Buscando datos...';
             rfcInput.disabled = true;
@@ -138,7 +140,12 @@ const CANACO = {
                 },
                 body: JSON.stringify({ rfc: rfc })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.found) {
                     // Pre-llenar formulario con datos existentes
@@ -169,8 +176,10 @@ const CANACO = {
             })
             .finally(() => {
                 // Restaurar input
-                rfcInput.placeholder = originalPlaceholder;
-                rfcInput.disabled = false;
+                if (rfcInput) {
+                    rfcInput.placeholder = originalPlaceholder;
+                    rfcInput.disabled = false;
+                }
             });
         },
         
@@ -179,6 +188,8 @@ const CANACO = {
             
             // Mostrar indicador de carga
             const phoneInput = document.getElementById('telefono');
+            if (!phoneInput) return; // Exit if input not found
+            
             const originalPlaceholder = phoneInput.placeholder;
             phoneInput.placeholder = 'Buscando datos...';
             phoneInput.disabled = true;
@@ -190,7 +201,12 @@ const CANACO = {
                 },
                 body: JSON.stringify({ telefono: telefono })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.found && data.invitado) {
                     // Pre-llenar formulario con datos existentes
@@ -211,8 +227,10 @@ const CANACO = {
             })
             .finally(() => {
                 // Restaurar input
-                phoneInput.placeholder = originalPlaceholder;
-                phoneInput.disabled = false;
+                if (phoneInput) {
+                    phoneInput.placeholder = originalPlaceholder;
+                    phoneInput.disabled = false;
+                }
             });
         }
     },
@@ -312,34 +330,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Auto-search functionality
-    const rfcSearchInput = document.getElementById('rfc');
-    if (rfcSearchInput) {
-        let timeout;
-        rfcSearchInput.addEventListener('input', function() {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                const eventSlug = this.dataset.eventSlug;
-                if (this.value.length >= 12) {
-                    CANACO.registration.searchByRFC(this.value, eventSlug);
-                }
-            }, 500);
-        });
-    }
-    
-    const phoneSearchInput = document.getElementById('telefono');
-    if (phoneSearchInput && phoneSearchInput.dataset.eventSlug) {
-        let timeout;
-        phoneSearchInput.addEventListener('input', function() {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                const eventSlug = this.dataset.eventSlug;
-                if (this.value.length >= 10) {
-                    CANACO.registration.searchByPhone(this.value, eventSlug);
-                }
-            }, 500);
-        });
-    }
+    // Auto-search functionality is handled by individual form templates
+    // to avoid duplicate event listeners and ensure proper validation
 });
 
 // Exponer funciones globalmente para uso en templates

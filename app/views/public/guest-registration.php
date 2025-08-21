@@ -186,6 +186,8 @@ $telefono = $_GET['telefono'] ?? '';
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const telefonoInput = document.getElementById('telefono');
+    if (!telefonoInput) return; // Exit if phone input not found
+    
     const eventSlug = telefonoInput.dataset.eventSlug;
     
     // Auto-buscar datos cuando se ingrese el teléfono

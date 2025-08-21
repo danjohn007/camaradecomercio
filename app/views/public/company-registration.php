@@ -183,6 +183,8 @@ $rfc = $_GET['rfc'] ?? '';
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const rfcInput = document.getElementById('rfc');
+    if (!rfcInput) return; // Exit if RFC input not found
+    
     const eventSlug = rfcInput.dataset.eventSlug;
     
     // Auto-buscar datos cuando se ingrese el RFC
