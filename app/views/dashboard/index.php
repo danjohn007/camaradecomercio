@@ -81,6 +81,51 @@
     </div>
 </div>
 
+<!-- Gráficas del dashboard -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Eventos por Estado
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="eventosEstadoChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Asistentes por Evento
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="asistentesEventoChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Cupo vs Ocupados
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="cupoOcupadosChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <!-- Eventos próximos -->
     <div class="col-md-8 mb-4">
@@ -196,3 +241,103 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gráfica de Eventos por Estado
+    const eventosEstadoCtx = document.getElementById('eventosEstadoChart').getContext('2d');
+    new Chart(eventosEstadoCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Publicados', 'Borradores', 'Cerrados', 'Cancelados'],
+            datasets: [{
+                data: [12, 5, 8, 2],
+                backgroundColor: [
+                    '#28a745',
+                    '#ffc107', 
+                    '#6c757d',
+                    '#dc3545'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Gráfica de Asistentes por Evento
+    const asistentesEventoCtx = document.getElementById('asistentesEventoChart').getContext('2d');
+    new Chart(asistentesEventoCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Foro Innovación', 'Conferencia Tech', 'Expo Negocios', 'Seminario Digital', 'Workshop AI'],
+            datasets: [{
+                label: 'Asistentes',
+                data: [85, 120, 98, 76, 134],
+                backgroundColor: '#007bff',
+                borderColor: '#0056b3',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Gráfica de Cupo vs Ocupados
+    const cupoOcupadosCtx = document.getElementById('cupoOcupadosChart').getContext('2d');
+    new Chart(cupoOcupadosCtx, {
+        type: 'line',
+        data: {
+            labels: ['Evento 1', 'Evento 2', 'Evento 3', 'Evento 4', 'Evento 5'],
+            datasets: [{
+                label: 'Cupo Máximo',
+                data: [150, 200, 120, 100, 180],
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                fill: false,
+                tension: 0.4
+            }, {
+                label: 'Ocupados',
+                data: [85, 120, 98, 76, 134],
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)', 
+                fill: false,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+});
+</script>
