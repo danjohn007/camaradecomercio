@@ -143,6 +143,8 @@ class EventController extends BaseController {
         
         $this->json(['success' => true]);
     }
+    
+    public function delete($id) {
         $this->requireAuth();
         
         $evento = $this->db->fetch(
