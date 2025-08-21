@@ -28,11 +28,18 @@ $pageTitle = 'Confirmación de Registro - ' . htmlspecialchars($registro['evento
                     <div class="card-body text-center">
                         <!-- QR Code -->
                         <div class="mb-4">
-                            <div class="bg-light p-4 rounded mx-auto" style="width: fit-content;">
+                            <div class="bg-light p-4 rounded mx-auto border" style="width: fit-content; position: relative;">
                                 <div id="qrcode"></div>
+                                <!-- Unique Code overlay -->
+                                <div class="text-center mt-3" style="border-top: 2px solid #4a7c59; padding-top: 10px;">
+                                    <strong style="font-size: 1.1rem; color: #4a7c59;">
+                                        <?php echo htmlspecialchars($registro['codigo_unico']); ?>
+                                    </strong>
+                                </div>
                             </div>
-                            <p class="small text-muted mt-2">
-                                Código único: <strong><?php echo htmlspecialchars($registro['codigo_unico']); ?></strong>
+                            <p class="small text-muted mt-3 mb-0">
+                                <i class="fas fa-qrcode me-1"></i>
+                                Presenta este código QR en el evento para verificar tu asistencia
                             </p>
                         </div>
                         
@@ -139,6 +146,19 @@ document.addEventListener('DOMContentLoaded', function() {
         background-color: #4a7c59 !important;
         -webkit-print-color-adjust: exact;
         color-adjust: exact;
+    }
+    
+    /* Ensure QR code and unique number are clearly visible when printed */
+    #qrcode {
+        -webkit-print-color-adjust: exact;
+        color-adjust: exact;
+    }
+    
+    .bg-light {
+        background-color: #f8f9fa !important;
+        -webkit-print-color-adjust: exact;
+        color-adjust: exact;
+        border: 2px solid #4a7c59 !important;
     }
 }
 </style>

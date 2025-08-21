@@ -2,8 +2,6 @@
 $pageTitle = 'Configuración'; 
 include 'app/views/layouts/header.php'; 
 ?>
-
-<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2"><i class="fas fa-cog me-2"></i>Configuración</h1>
         <a href="<?php echo BASE_URL; ?>perfil" class="btn btn-outline-secondary">
@@ -135,6 +133,5 @@ include 'app/views/layouts/header.php';
             </div>
         </div>
     </div>
-</main>
 
 <?php include 'app/views/layouts/footer.php'; ?>
