@@ -24,8 +24,17 @@ $router->add('eventos/editar/(\d+)', 'EventController@edit');
 $router->add('eventos/eliminar/(\d+)', 'EventController@delete');
 $router->add('eventos/cambiar-estado/(\d+)', 'EventController@changeStatus');
 $router->add('usuarios', 'UserController@index');
+$router->add('usuarios/crear', 'UserController@create');
+$router->add('usuarios/editar/(\\d+)', 'UserController@edit');
+$router->add('usuarios/eliminar/(\\d+)', 'UserController@delete');
+$router->add('usuarios/cambiar-estado/(\\d+)', 'UserController@changeStatus');
 $router->add('asistentes', 'AttendeeController@index');
 $router->add('reportes', 'ReportController@index');
+$router->add('reportes/export', 'ReportController@export');
+$router->add('qr', 'QrController@index');
+$router->add('qr/validar', 'QrController@validate');
+$router->add('qr/historial', 'QrController@history');
+$router->add('qr/stats', 'QrController@stats');
 
 // Rutas públicas para registro de eventos
 $router->add('evento/([a-zA-Z0-9\-]+)', 'PublicController@eventPage');

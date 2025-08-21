@@ -137,7 +137,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
+                            <a class="nav-link" href="<?php echo BASE_URL; ?>qr">
                                 <i class="fas fa-qrcode me-2"></i>
                                 Validación QR
                             </a>

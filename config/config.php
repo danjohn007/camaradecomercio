@@ -5,12 +5,12 @@
 
 // Configuración de la base de datos
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'canaco_eventos');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_NAME', 'ejercito_reservaciones');
+define('DB_USER', 'ejercito_reservaciones');
+define('DB_PASS', 'Danjohn007');
 
 // Configuración de la aplicación
-define('BASE_URL', '/camaradecomercio/');
+define('BASE_URL', '/reservaciones/');
 define('APP_NAME', 'Sistema de Eventos CANACO');
 define('APP_VERSION', '1.0.0');
 
