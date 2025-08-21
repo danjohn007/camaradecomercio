@@ -58,7 +58,7 @@ $telefono = $_GET['telefono'] ?? '';
                                            name="telefono" required maxlength="10" 
                                            value="<?php echo htmlspecialchars($telefono); ?>"
                                            data-event-slug="<?php echo $evento['slug']; ?>"
-                                           placeholder="10 dígitos">
+                                           placeholder="Teléfono (10 dígitos)">
                                 </div>
                                 
                                 <div class="col-md-6">

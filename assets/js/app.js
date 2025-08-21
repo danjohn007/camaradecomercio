@@ -125,6 +125,12 @@ const CANACO = {
         searchByRFC: function(rfc, eventSlug) {
             if (rfc.length < 12) return;
             
+            // Mostrar indicador de carga
+            const rfcInput = document.getElementById('rfc');
+            const originalPlaceholder = rfcInput.placeholder;
+            rfcInput.placeholder = 'Buscando datos...';
+            rfcInput.disabled = true;
+            
             fetch(`${CANACO.baseUrl}api/buscar-empresa`, {
                 method: 'POST',
                 headers: {
@@ -136,27 +142,46 @@ const CANACO = {
             .then(data => {
                 if (data.found) {
                     // Pre-llenar formulario con datos existentes
-                    document.getElementById('razon_social').value = data.empresa.razon_social || '';
-                    document.getElementById('nombre_comercial').value = data.empresa.nombre_comercial || '';
-                    document.getElementById('telefono_oficina').value = data.empresa.telefono_oficina || '';
-                    
-                    if (data.representante) {
-                        document.getElementById('nombre_completo').value = data.representante.nombre_completo || '';
-                        document.getElementById('email').value = data.representante.email || '';
-                        document.getElementById('telefono').value = data.representante.telefono || '';
-                        document.getElementById('puesto').value = data.representante.puesto || '';
+                    if (data.empresa) {
+                        if (document.getElementById('razon_social')) document.getElementById('razon_social').value = data.empresa.razon_social || '';
+                        if (document.getElementById('nombre_comercial')) document.getElementById('nombre_comercial').value = data.empresa.nombre_comercial || '';
+                        if (document.getElementById('telefono_oficina')) document.getElementById('telefono_oficina').value = data.empresa.telefono_oficina || '';
+                        if (document.getElementById('direccion_fiscal')) document.getElementById('direccion_fiscal').value = data.empresa.direccion_fiscal || '';
+                        if (document.getElementById('direccion_comercial')) document.getElementById('direccion_comercial').value = data.empresa.direccion_comercial || '';
+                        if (document.getElementById('giro_comercial')) document.getElementById('giro_comercial').value = data.empresa.giro_comercial || '';
                     }
                     
-                    CANACO.utils.showAlert('Datos pre-cargados desde registros anteriores', 'info');
+                    if (data.representante) {
+                        if (document.getElementById('nombre_completo')) document.getElementById('nombre_completo').value = data.representante.nombre_completo || '';
+                        if (document.getElementById('email')) document.getElementById('email').value = data.representante.email || '';
+                        if (document.getElementById('telefono')) document.getElementById('telefono').value = data.representante.telefono || '';
+                        if (document.getElementById('puesto')) document.getElementById('puesto').value = data.representante.puesto || '';
+                    }
+                    
+                    CANACO.utils.showAlert('✓ Datos encontrados y pre-cargados desde registros anteriores', 'success');
+                } else if (rfc.length >= 12) {
+                    CANACO.utils.showAlert('ℹ RFC no encontrado en registros anteriores. Puedes continuar con el registro.', 'info');
                 }
             })
             .catch(error => {
                 console.error('Error al buscar empresa:', error);
+                CANACO.utils.showAlert('Error de conexión al buscar datos. Intenta nuevamente.', 'warning');
+            })
+            .finally(() => {
+                // Restaurar input
+                rfcInput.placeholder = originalPlaceholder;
+                rfcInput.disabled = false;
             });
         },
         
         searchByPhone: function(telefono, eventSlug) {
             if (telefono.length < 10) return;
+            
+            // Mostrar indicador de carga
+            const phoneInput = document.getElementById('telefono');
+            const originalPlaceholder = phoneInput.placeholder;
+            phoneInput.placeholder = 'Buscando datos...';
+            phoneInput.disabled = true;
             
             fetch(`${CANACO.baseUrl}api/buscar-invitado`, {
                 method: 'POST',
@@ -167,19 +192,27 @@ const CANACO = {
             })
             .then(response => response.json())
             .then(data => {
-                if (data.found) {
+                if (data.found && data.invitado) {
                     // Pre-llenar formulario con datos existentes
-                    document.getElementById('nombre_completo').value = data.invitado.nombre_completo || '';
-                    document.getElementById('email').value = data.invitado.email || '';
-                    document.getElementById('fecha_nacimiento').value = data.invitado.fecha_nacimiento || '';
-                    document.getElementById('ocupacion').value = data.invitado.ocupacion || '';
-                    document.getElementById('cargo_gubernamental').value = data.invitado.cargo_gubernamental || '';
+                    if (document.getElementById('nombre_completo')) document.getElementById('nombre_completo').value = data.invitado.nombre_completo || '';
+                    if (document.getElementById('email')) document.getElementById('email').value = data.invitado.email || '';
+                    if (document.getElementById('fecha_nacimiento')) document.getElementById('fecha_nacimiento').value = data.invitado.fecha_nacimiento || '';
+                    if (document.getElementById('ocupacion')) document.getElementById('ocupacion').value = data.invitado.ocupacion || '';
+                    if (document.getElementById('cargo_gubernamental')) document.getElementById('cargo_gubernamental').value = data.invitado.cargo_gubernamental || '';
                     
-                    CANACO.utils.showAlert('Datos pre-cargados desde registros anteriores', 'info');
+                    CANACO.utils.showAlert('✓ Datos encontrados y pre-cargados desde registros anteriores', 'success');
+                } else if (telefono.length >= 10) {
+                    CANACO.utils.showAlert('ℹ Teléfono no encontrado en registros anteriores. Puedes continuar con el registro.', 'info');
                 }
             })
             .catch(error => {
                 console.error('Error al buscar invitado:', error);
+                CANACO.utils.showAlert('Error de conexión al buscar datos. Intenta nuevamente.', 'warning');
+            })
+            .finally(() => {
+                // Restaurar input
+                phoneInput.placeholder = originalPlaceholder;
+                phoneInput.disabled = false;
             });
         }
     },
@@ -280,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Auto-search functionality
-    const rfcSearchInput = document.getElementById('rfc_search');
+    const rfcSearchInput = document.getElementById('rfc');
     if (rfcSearchInput) {
         let timeout;
         rfcSearchInput.addEventListener('input', function() {
@@ -294,8 +327,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    const phoneSearchInput = document.getElementById('telefono_search');
-    if (phoneSearchInput) {
+    const phoneSearchInput = document.getElementById('telefono');
+    if (phoneSearchInput && phoneSearchInput.dataset.eventSlug) {
         let timeout;
         phoneSearchInput.addEventListener('input', function() {
             clearTimeout(timeout);

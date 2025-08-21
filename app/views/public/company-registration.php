@@ -84,7 +84,8 @@ $rfc = $_GET['rfc'] ?? '';
                                     <input type="text" class="form-control form-control-lg" id="rfc" 
                                            name="rfc" required maxlength="13" style="text-transform: uppercase;"
                                            value="<?php echo htmlspecialchars($rfc); ?>" 
-                                           data-event-slug="<?php echo $evento['slug']; ?>">
+                                           data-event-slug="<?php echo $evento['slug']; ?>"
+                                           placeholder="RFC de la empresa (12-13 caracteres)">
                                 </div>
                                 
                                 <div class="col-md-6">
