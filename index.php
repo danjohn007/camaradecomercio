@@ -46,6 +46,8 @@ $router->add('evento/([a-zA-Z0-9\-]+)', 'PublicController@eventPage');
 $router->add('registro/empresa/([a-zA-Z0-9\-]+)', 'PublicController@companyRegistration');
 $router->add('registro/invitado/([a-zA-Z0-9\-]+)', 'PublicController@guestRegistration');
 $router->add('registro/confirmacion/([a-zA-Z0-9\-]+)', 'PublicController@confirmation');
+$router->add('historial-boletos', 'PublicController@ticketHistory');
+$router->add('buscar-historial-boletos', 'PublicController@searchTicketHistory');
 
 // Rutas API
 $router->add('api/buscar-empresa', 'ApiController@buscarEmpresa');

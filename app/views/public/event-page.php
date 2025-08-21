@@ -141,11 +141,17 @@
                 <div class="card">
                     <div class="card-body text-center">
                         <h5 class="text-canaco">¿Necesitas ayuda?</h5>
-                        <p class="mb-0">
+                        <p class="mb-3">
                             Si tienes dudas sobre el registro o el evento, contáctanos al 
                             <strong>+52 442 123 4567</strong> o escríbenos a 
                             <strong>eventos@canaco.org.mx</strong>
                         </p>
+                        <div>
+                            <a href="<?php echo BASE_URL; ?>historial-boletos" class="btn btn-outline-info">
+                                <i class="fas fa-history me-2"></i>
+                                Ver historial de mis boletos
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
