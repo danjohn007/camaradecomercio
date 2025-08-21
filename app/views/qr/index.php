@@ -1,4 +1,7 @@
-<?php $pageTitle = 'Validación QR'; ?>
+<?php 
+$pageTitle = 'Validación QR'; 
+include 'app/views/layouts/header.php'; 
+?>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">
@@ -432,4 +435,7 @@ window.addEventListener('beforeunload', function() {
     border-color: var(--canaco-green);
     color: white;
 }
+</style>
+
+<?php include 'app/views/layouts/footer.php'; ?>
 </style>
