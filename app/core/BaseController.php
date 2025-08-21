@@ -13,9 +13,6 @@ class BaseController {
     protected function view($view, $data = []) {
         extract($data);
         
-        // Cargar header
-        require_once 'app/views/layouts/header.php';
-        
         // Cargar vista específica
         $viewFile = "app/views/{$view}.php";
         if (file_exists($viewFile)) {
@@ -23,9 +20,6 @@ class BaseController {
         } else {
             throw new Exception("Vista {$view} no encontrada");
         }
-        
-        // Cargar footer
-        require_once 'app/views/layouts/footer.php';
     }
     
     protected function redirect($url) {
