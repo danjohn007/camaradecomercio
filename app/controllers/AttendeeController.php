@@ -119,9 +119,9 @@ class AttendeeController extends BaseController {
         $statsQuery = "
             SELECT 
                 COUNT(*) as total_registros,
-                SUM(CASE WHEN estado = 'asistio' THEN 1 ELSE 0 END) as total_asistieron,
-                SUM(CASE WHEN estado = 'registrado' THEN 1 ELSE 0 END) as total_pendientes,
-                SUM(CASE WHEN estado = 'cancelado' THEN 1 ELSE 0 END) as total_cancelados
+                SUM(CASE WHEN re.estado = 'asistio' THEN 1 ELSE 0 END) as total_asistieron,
+                SUM(CASE WHEN re.estado = 'registrado' THEN 1 ELSE 0 END) as total_pendientes,
+                SUM(CASE WHEN re.estado = 'cancelado' THEN 1 ELSE 0 END) as total_cancelados
             FROM registros_eventos re
             INNER JOIN eventos e ON re.evento_id = e.id
             " . ($_SESSION['user_role'] === 'gestor' ? "WHERE e.usuario_id = ?" : "");
