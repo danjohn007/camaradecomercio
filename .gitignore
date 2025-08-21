@@ -1,0 +1,68 @@
+# Sistema de Eventos CANACO - .gitignore
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Configuration files with sensitive data
+config/config.local.php
+
+# Upload directories
+uploads/*
+!uploads/.gitkeep
+
+# Cache and temporary files
+cache/
+tmp/
+temp/
+
+# Logs
+logs/
+*.log
+
+# Vendor dependencies (if using Composer)
+vendor/
+composer.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*.sql.backup
+
+# Development tools
+phpdoc/
+docs/build/
+
+# Node modules (if using any JS build tools)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build artifacts
+dist/
+build/
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Test files
+tests/coverage/
+tests/tmp/
