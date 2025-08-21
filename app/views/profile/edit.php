@@ -3,7 +3,6 @@ $pageTitle = 'Editar Perfil';
 include 'app/views/layouts/header.php'; 
 ?>
 
-<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2"><i class="fas fa-edit me-2"></i>Editar Perfil</h1>
         <a href="<?php echo BASE_URL; ?>perfil" class="btn btn-outline-secondary">
@@ -50,7 +49,7 @@ include 'app/views/layouts/header.php';
                             <div class="col-md-6">
                                 <label class="form-label">Rol</label>
                                 <input type="text" class="form-control" 
-                                       value="<?php echo ucfirst($usuario['role']); ?>" readonly>
+                                       value="<?php echo ucfirst($usuario['rol']); ?>" readonly>
                                 <div class="form-text">El rol no puede ser modificado.</div>
                             </div>
                             
@@ -120,7 +119,6 @@ include 'app/views/layouts/header.php';
             </div>
         </div>
     </div>
-</main>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

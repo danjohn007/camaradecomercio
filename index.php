@@ -29,6 +29,7 @@ $router->add('usuarios/editar/(\\d+)', 'UserController@edit');
 $router->add('usuarios/eliminar/(\\d+)', 'UserController@delete');
 $router->add('usuarios/cambiar-estado/(\\d+)', 'UserController@changeStatus');
 $router->add('asistentes', 'AttendeeController@index');
+$router->add('asistentes/export', 'AttendeeController@export');
 $router->add('reportes', 'ReportController@index');
 $router->add('reportes/export', 'ReportController@export');
 $router->add('qr', 'QrController@index');
