@@ -82,7 +82,7 @@ class PublicController extends BaseController {
     public function confirmation($codigoUnico) {
         // Obtener registro por código único
         $registro = $this->db->fetch(
-            "SELECT re.*, e.titulo as evento_titulo, e.fecha_evento, e.ubicacion, e.descripcion,
+            "SELECT re.*, e.titulo as evento_titulo, e.fecha_evento, e.ubicacion, e.descripcion, e.slug as evento_slug,
                     CASE 
                         WHEN re.tipo_registrante = 'empresa' THEN emp.razon_social
                         ELSE inv.nombre_completo
@@ -107,6 +107,66 @@ class PublicController extends BaseController {
         
         $this->view('public/confirmation', [
             'registro' => $registro
+        ]);
+    }
+    
+    public function ticketHistory() {
+        // Vista para mostrar el historial de boletos por RFC o teléfono
+        $this->view('public/ticket-history');
+    }
+    
+    public function searchTicketHistory() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $_SESSION['error'] = 'Método no permitido';
+            $this->redirect('historial-boletos');
+        }
+        
+        $identifier = trim($_POST['identifier'] ?? '');
+        $identifierType = $_POST['identifier_type'] ?? '';
+        
+        if (empty($identifier)) {
+            $_SESSION['error'] = 'Debe proporcionar un RFC o teléfono';
+            $this->redirect('historial-boletos');
+        }
+        
+        $tickets = [];
+        
+        if ($identifierType === 'rfc') {
+            // Buscar boletos por RFC (empresas)
+            $tickets = $this->db->fetchAll(
+                "SELECT re.codigo_unico, re.estado, re.fecha_asistencia, re.created_at,
+                        e.titulo as evento_titulo, e.fecha_evento, e.ubicacion,
+                        emp.razon_social as nombre_registrante, rep.email,
+                        'empresa' as tipo_registrante
+                 FROM registros_eventos re
+                 INNER JOIN eventos e ON re.evento_id = e.id
+                 INNER JOIN empresas emp ON re.empresa_id = emp.id
+                 INNER JOIN representantes rep ON re.representante_id = rep.id
+                 WHERE emp.rfc = ? AND re.estado != 'cancelado'
+                 ORDER BY re.created_at DESC",
+                [$identifier]
+            );
+        } else {
+            // Buscar boletos por teléfono (invitados)
+            $tickets = $this->db->fetchAll(
+                "SELECT re.codigo_unico, re.estado, re.fecha_asistencia, re.created_at,
+                        e.titulo as evento_titulo, e.fecha_evento, e.ubicacion,
+                        inv.nombre_completo as nombre_registrante, inv.email,
+                        'invitado' as tipo_registrante
+                 FROM registros_eventos re
+                 INNER JOIN eventos e ON re.evento_id = e.id
+                 INNER JOIN invitados inv ON re.invitado_id = inv.id
+                 WHERE inv.telefono = ? AND re.estado != 'cancelado'
+                 ORDER BY re.created_at DESC",
+                [$identifier]
+            );
+        }
+        
+        $this->view('public/ticket-history', [
+            'tickets' => $tickets,
+            'searchPerformed' => true,
+            'identifier' => $identifier,
+            'identifierType' => $identifierType
         ]);
     }
 }

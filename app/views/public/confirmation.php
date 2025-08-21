@@ -88,9 +88,13 @@ $pageTitle = 'Confirmación de Registro - ' . htmlspecialchars($registro['evento
                                 <i class="fas fa-print me-2"></i>
                                 Imprimir Boleto
                             </button>
-                            <a href="<?php echo BASE_URL; ?>" class="btn btn-outline-secondary">
-                                <i class="fas fa-home me-2"></i>
-                                Volver al Inicio
+                            <a href="<?php echo BASE_URL; ?>evento/<?php echo $registro['evento_slug'] ?? '#'; ?>" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Regresar al evento
+                            </a>
+                            <a href="<?php echo BASE_URL; ?>historial-boletos" class="btn btn-outline-info">
+                                <i class="fas fa-history me-2"></i>
+                                Historial de boletos
                             </a>
                         </div>
                     </div>
