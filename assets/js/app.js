@@ -122,6 +122,33 @@ const CANACO = {
     
     // Funciones para registro público
     registration: {
+        // Helper function to safely set form field values
+        setFieldValue: function(fieldId, value) {
+            const element = document.getElementById(fieldId);
+            if (!element) {
+                console.warn(`Field with ID '${fieldId}' not found`);
+                return false;
+            }
+            
+            if (element.tagName.toLowerCase() === 'select') {
+                // For select elements, check if the value exists as an option
+                const option = element.querySelector(`option[value="${value}"]`);
+                if (option) {
+                    element.value = value;
+                    console.log(`Set select field '${fieldId}' to '${value}'`);
+                    return true;
+                } else {
+                    console.warn(`Value '${value}' not found in select options for field '${fieldId}'`);
+                    return false;
+                }
+            } else {
+                // For other input types, set the value directly
+                element.value = value || '';
+                console.log(`Set input field '${fieldId}' to '${value}'`);
+                return true;
+            }
+        },
+        
         searchByRFC: function(rfc, eventSlug) {
             if (rfc.length < 12) return;
             
@@ -140,22 +167,25 @@ const CANACO = {
             })
             .then(response => response.json())
             .then(data => {
+                console.log('API Response from buscar-empresa:', data);
                 if (data.found) {
                     // Pre-llenar formulario con datos existentes
                     if (data.empresa) {
-                        if (document.getElementById('razon_social')) document.getElementById('razon_social').value = data.empresa.razon_social || '';
-                        if (document.getElementById('nombre_comercial')) document.getElementById('nombre_comercial').value = data.empresa.nombre_comercial || '';
-                        if (document.getElementById('telefono_oficina')) document.getElementById('telefono_oficina').value = data.empresa.telefono_oficina || '';
-                        if (document.getElementById('direccion_fiscal')) document.getElementById('direccion_fiscal').value = data.empresa.direccion_fiscal || '';
-                        if (document.getElementById('direccion_comercial')) document.getElementById('direccion_comercial').value = data.empresa.direccion_comercial || '';
-                        if (document.getElementById('giro_comercial')) document.getElementById('giro_comercial').value = data.empresa.giro_comercial || '';
+                        console.log('Empresa data:', data.empresa);
+                        CANACO.registration.setFieldValue('razon_social', data.empresa.razon_social);
+                        CANACO.registration.setFieldValue('nombre_comercial', data.empresa.nombre_comercial);
+                        CANACO.registration.setFieldValue('telefono_oficina', data.empresa.telefono_oficina);
+                        CANACO.registration.setFieldValue('direccion_fiscal', data.empresa.direccion_fiscal);
+                        CANACO.registration.setFieldValue('direccion_comercial', data.empresa.direccion_comercial);
+                        CANACO.registration.setFieldValue('giro_comercial', data.empresa.giro_comercial);
                     }
                     
                     if (data.representante) {
-                        if (document.getElementById('nombre_completo')) document.getElementById('nombre_completo').value = data.representante.nombre_completo || '';
-                        if (document.getElementById('email')) document.getElementById('email').value = data.representante.email || '';
-                        if (document.getElementById('telefono')) document.getElementById('telefono').value = data.representante.telefono || '';
-                        if (document.getElementById('puesto')) document.getElementById('puesto').value = data.representante.puesto || '';
+                        console.log('Representante data:', data.representante);
+                        CANACO.registration.setFieldValue('nombre_completo', data.representante.nombre_completo);
+                        CANACO.registration.setFieldValue('email', data.representante.email);
+                        CANACO.registration.setFieldValue('telefono', data.representante.telefono);
+                        CANACO.registration.setFieldValue('puesto', data.representante.puesto);
                     }
                     
                     CANACO.utils.showAlert('✓ Datos encontrados y pre-cargados desde registros anteriores', 'success');
@@ -192,13 +222,15 @@ const CANACO = {
             })
             .then(response => response.json())
             .then(data => {
+                console.log('API Response from buscar-invitado:', data);
                 if (data.found && data.invitado) {
                     // Pre-llenar formulario con datos existentes
-                    if (document.getElementById('nombre_completo')) document.getElementById('nombre_completo').value = data.invitado.nombre_completo || '';
-                    if (document.getElementById('email')) document.getElementById('email').value = data.invitado.email || '';
-                    if (document.getElementById('fecha_nacimiento')) document.getElementById('fecha_nacimiento').value = data.invitado.fecha_nacimiento || '';
-                    if (document.getElementById('ocupacion')) document.getElementById('ocupacion').value = data.invitado.ocupacion || '';
-                    if (document.getElementById('cargo_gubernamental')) document.getElementById('cargo_gubernamental').value = data.invitado.cargo_gubernamental || '';
+                    console.log('Invitado data:', data.invitado);
+                    CANACO.registration.setFieldValue('nombre_completo', data.invitado.nombre_completo);
+                    CANACO.registration.setFieldValue('email', data.invitado.email);
+                    CANACO.registration.setFieldValue('fecha_nacimiento', data.invitado.fecha_nacimiento);
+                    CANACO.registration.setFieldValue('ocupacion', data.invitado.ocupacion);
+                    CANACO.registration.setFieldValue('cargo_gubernamental', data.invitado.cargo_gubernamental);
                     
                     CANACO.utils.showAlert('✓ Datos encontrados y pre-cargados desde registros anteriores', 'success');
                 } else if (telefono.length >= 10) {

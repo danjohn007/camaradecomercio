@@ -30,12 +30,17 @@ class ApiController extends BaseController {
                 [$empresa['id']]
             );
             
+            // Debug logging
+            error_log("API buscarEmpresa - RFC: $rfc, Empresa encontrada: " . json_encode($empresa));
+            error_log("API buscarEmpresa - Representante encontrado: " . json_encode($representante));
+            
             $this->json([
                 'found' => true,
                 'empresa' => $empresa,
                 'representante' => $representante
             ]);
         } else {
+            error_log("API buscarEmpresa - RFC: $rfc, No encontrado");
             $this->json(['found' => false]);
         }
     }
@@ -59,11 +64,15 @@ class ApiController extends BaseController {
         );
         
         if ($invitado) {
+            // Debug logging
+            error_log("API buscarInvitado - Telefono: $telefono, Invitado encontrado: " . json_encode($invitado));
+            
             $this->json([
                 'found' => true,
                 'invitado' => $invitado
             ]);
         } else {
+            error_log("API buscarInvitado - Telefono: $telefono, No encontrado");
             $this->json(['found' => false]);
         }
     }
