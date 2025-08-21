@@ -126,7 +126,6 @@ const CANACO = {
         setFieldValue: function(fieldId, value) {
             const element = document.getElementById(fieldId);
             if (!element) {
-                console.warn(`Field with ID '${fieldId}' not found`);
                 return false;
             }
             
@@ -135,16 +134,14 @@ const CANACO = {
                 const option = element.querySelector(`option[value="${value}"]`);
                 if (option) {
                     element.value = value;
-                    console.log(`Set select field '${fieldId}' to '${value}'`);
                     return true;
                 } else {
-                    console.warn(`Value '${value}' not found in select options for field '${fieldId}'`);
+                    // Value not found in select options, skip silently
                     return false;
                 }
             } else {
                 // For other input types, set the value directly
                 element.value = value || '';
-                console.log(`Set input field '${fieldId}' to '${value}'`);
                 return true;
             }
         },
@@ -167,11 +164,9 @@ const CANACO = {
             })
             .then(response => response.json())
             .then(data => {
-                console.log('API Response from buscar-empresa:', data);
                 if (data.found) {
                     // Pre-llenar formulario con datos existentes
                     if (data.empresa) {
-                        console.log('Empresa data:', data.empresa);
                         CANACO.registration.setFieldValue('razon_social', data.empresa.razon_social);
                         CANACO.registration.setFieldValue('nombre_comercial', data.empresa.nombre_comercial);
                         CANACO.registration.setFieldValue('telefono_oficina', data.empresa.telefono_oficina);
@@ -181,7 +176,6 @@ const CANACO = {
                     }
                     
                     if (data.representante) {
-                        console.log('Representante data:', data.representante);
                         CANACO.registration.setFieldValue('nombre_completo', data.representante.nombre_completo);
                         CANACO.registration.setFieldValue('email', data.representante.email);
                         CANACO.registration.setFieldValue('telefono', data.representante.telefono);
@@ -222,10 +216,8 @@ const CANACO = {
             })
             .then(response => response.json())
             .then(data => {
-                console.log('API Response from buscar-invitado:', data);
                 if (data.found && data.invitado) {
                     // Pre-llenar formulario con datos existentes
-                    console.log('Invitado data:', data.invitado);
                     CANACO.registration.setFieldValue('nombre_completo', data.invitado.nombre_completo);
                     CANACO.registration.setFieldValue('email', data.invitado.email);
                     CANACO.registration.setFieldValue('fecha_nacimiento', data.invitado.fecha_nacimiento);
