@@ -90,6 +90,8 @@ class ApiController extends BaseController {
         $telefonoOficina = trim($_POST['telefono_oficina'] ?? '');
         $aniversario = $_POST['aniversario'] ?? null;
         $numeroAfiliacion = trim($_POST['numero_afiliacion'] ?? '');
+        $aceptaTerminos = isset($_POST['acepta_terminos']);
+        $consejeroCanaco = isset($_POST['consejero_camara']);
         
         // Validaciones básicas
         $errors = [];
@@ -101,6 +103,7 @@ class ApiController extends BaseController {
         if (empty($razonSocial)) $errors[] = 'Razón social requerida';
         if (empty($nombreComercial)) $errors[] = 'Nombre comercial requerido';
         if (empty($giroComercial)) $errors[] = 'Giro comercial requerido';
+        if (!$aceptaTerminos) $errors[] = 'Debe aceptar los términos y condiciones';
         
         if (!empty($errors)) {
             $_SESSION['error'] = implode(', ', $errors);
