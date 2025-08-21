@@ -78,5 +78,36 @@ class PublicController extends BaseController {
             'eventSlug' => $slug
         ]);
     }
+    
+    public function confirmation($codigoUnico) {
+        // Obtener registro por código único
+        $registro = $this->db->fetch(
+            "SELECT re.*, e.titulo as evento_titulo, e.fecha_evento, e.ubicacion, e.descripcion,
+                    CASE 
+                        WHEN re.tipo_registrante = 'empresa' THEN emp.razon_social
+                        ELSE inv.nombre_completo
+                    END as nombre_registrante,
+                    CASE 
+                        WHEN re.tipo_registrante = 'empresa' THEN rep.email
+                        ELSE inv.email
+                    END as email_registrante
+             FROM registros_eventos re
+             INNER JOIN eventos e ON re.evento_id = e.id
+             LEFT JOIN empresas emp ON re.empresa_id = emp.id
+             LEFT JOIN representantes rep ON re.representante_id = rep.id
+             LEFT JOIN invitados inv ON re.invitado_id = inv.id
+             WHERE re.codigo_unico = ?",
+            [$codigoUnico]
+        );
+        
+        if (!$registro) {
+            $_SESSION['error'] = 'Registro no encontrado';
+            $this->redirect('');
+        }
+        
+        $this->view('public/confirmation', [
+            'registro' => $registro
+        ]);
+    }
 }
 ?>
