@@ -68,6 +68,76 @@ class ApiController extends BaseController {
         }
     }
     
+    public function buscarPorTelefono() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['error' => 'Método no permitido'], 405);
+        }
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        $telefono = $input['telefono'] ?? '';
+        
+        if (empty($telefono)) {
+            $this->json(['error' => 'Teléfono requerido'], 400);
+        }
+        
+        $resultados = [];
+        
+        // 1. Buscar en tabla invitados
+        $invitado = $this->db->fetch(
+            "SELECT *, 'invitado' as tipo_fuente, created_at as fecha_registro FROM invitados WHERE telefono = ?",
+            [$telefono]
+        );
+        if ($invitado) {
+            $resultados[] = $invitado;
+        }
+        
+        // 2. Buscar en tabla representantes (con datos de empresa)
+        $representante = $this->db->fetch(
+            "SELECT r.*, e.rfc, e.razon_social, e.nombre_comercial, e.direccion_fiscal, 
+                    e.direccion_comercial, e.telefono_oficina, e.giro_comercial, e.numero_afiliacion,
+                    'representante' as tipo_fuente, r.created_at as fecha_registro
+             FROM representantes r 
+             INNER JOIN empresas e ON r.empresa_id = e.id 
+             WHERE r.telefono = ?",
+            [$telefono]
+        );
+        if ($representante) {
+            $resultados[] = $representante;
+        }
+        
+        // 3. Buscar en tabla empresas por teléfono de oficina
+        $empresa = $this->db->fetch(
+            "SELECT e.*, 'empresa' as tipo_fuente, e.created_at as fecha_registro,
+                    r.nombre_completo, r.email, r.telefono, r.puesto
+             FROM empresas e 
+             LEFT JOIN representantes r ON e.id = r.empresa_id AND r.es_contacto_principal = 1
+             WHERE e.telefono_oficina = ?",
+            [$telefono]
+        );
+        if ($empresa) {
+            $resultados[] = $empresa;
+        }
+        
+        // Si encontramos resultados, devolver el más reciente
+        if (!empty($resultados)) {
+            // Ordenar por fecha de creación descendente (más reciente primero)
+            usort($resultados, function($a, $b) {
+                return strtotime($b['fecha_registro']) - strtotime($a['fecha_registro']);
+            });
+            
+            $registro_mas_reciente = $resultados[0];
+            
+            $this->json([
+                'found' => true,
+                'tipo' => $registro_mas_reciente['tipo_fuente'],
+                'data' => $registro_mas_reciente,
+                'total_encontrados' => count($resultados)
+            ]);
+        } else {
+            $this->json(['found' => false]);
+        }
+    }
+    
     public function buscarPorEmail() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->json(['error' => 'Método no permitido'], 405);
