@@ -113,25 +113,11 @@
                                 </div>
                             </div>
                             
-                            <div class="row g-3 mt-3">
-                                <div class="col-md-6">
-                                    <?php if ($evento['tipo_publico'] === 'todos' || $evento['tipo_publico'] === 'empresas'): ?>
-                                        <a href="<?php echo BASE_URL; ?>registro/empresa/<?php echo $evento['slug']; ?>" 
-                                           class="btn btn-outline-canaco btn-lg w-100">
-                                            <i class="fas fa-building me-2"></i>
-                                            Registro de Empresa
-                                        </a>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="col-md-6">
-                                    <?php if ($evento['tipo_publico'] === 'todos' || $evento['tipo_publico'] === 'invitados'): ?>
-                                        <a href="<?php echo BASE_URL; ?>registro/invitado/<?php echo $evento['slug']; ?>" 
-                                           class="btn btn-outline-canaco btn-lg w-100">
-                                            <i class="fas fa-user me-2"></i>
-                                            Registro de Invitado
-                                        </a>
-                                    <?php endif; ?>
-                                </div>
+                            <div class="text-center mt-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Ingrese su teléfono o correo para continuar con el registro
+                                </small>
                             </div>
                         </form>
                         
@@ -220,15 +206,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const isPhone = /^[0-9]{10}$/.test(query.replace(/\D/g, ''));
         
         if (isEmail) {
-            // Search by email (could be either company or guest)
-            searchByEmail(query, eventSlug);
+            // Redirect to registration with email
+            window.location.href = `<?php echo BASE_URL; ?>registro/invitado/${eventSlug}?email=${encodeURIComponent(query)}`;
         } else if (isPhone) {
-            // Search by phone (guest registration)
+            // Redirect to registration with phone
             const phoneOnly = query.replace(/\D/g, '');
             window.location.href = `<?php echo BASE_URL; ?>registro/invitado/${eventSlug}?telefono=${encodeURIComponent(phoneOnly)}`;
         } else if (query.length >= 12) {
-            // Assume it's RFC (company registration)
-            window.location.href = `<?php echo BASE_URL; ?>registro/empresa/${eventSlug}?rfc=${encodeURIComponent(query.toUpperCase())}`;
+            // Assume it's RFC - redirect to registration with RFC
+            window.location.href = `<?php echo BASE_URL; ?>registro/invitado/${eventSlug}?rfc=${encodeURIComponent(query.toUpperCase())}`;
         } else {
             alert('Por favor ingrese un teléfono (10 dígitos), correo electrónico o RFC válido');
         }
@@ -238,12 +224,6 @@ document.addEventListener('DOMContentLoaded', function() {
             btnBuscar.innerHTML = originalText;
             btnBuscar.disabled = false;
         }, 2000);
-    }
-    
-    function searchByEmail(email, eventSlug) {
-        // Try to determine if email belongs to company or guest
-        // For now, we'll default to guest registration with email pre-filled
-        window.location.href = `<?php echo BASE_URL; ?>registro/invitado/${eventSlug}?email=${encodeURIComponent(email)}`;
     }
 });
 </script>
