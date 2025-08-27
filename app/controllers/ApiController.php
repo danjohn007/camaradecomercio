@@ -17,18 +17,28 @@ class ApiController extends BaseController {
             $this->json(['error' => 'RFC requerido'], 400);
         }
         
-        // Buscar empresa por RFC
+        // Buscar empresa por RFC (obtener la más reciente si hay múltiples)
         $empresa = $this->db->fetch(
-            "SELECT * FROM empresas WHERE rfc = ?",
+            "SELECT * FROM empresas WHERE rfc = ? ORDER BY updated_at DESC, created_at DESC LIMIT 1",
             [$rfc]
         );
         
         if ($empresa) {
-            // Buscar representante principal
+            // Buscar representante principal más reciente
             $representante = $this->db->fetch(
-                "SELECT * FROM representantes WHERE empresa_id = ? AND es_contacto_principal = 1",
+                "SELECT * FROM representantes WHERE empresa_id = ? AND es_contacto_principal = 1 
+                 ORDER BY updated_at DESC, created_at DESC LIMIT 1",
                 [$empresa['id']]
             );
+            
+            // Si no hay representante principal, buscar el más reciente
+            if (!$representante) {
+                $representante = $this->db->fetch(
+                    "SELECT * FROM representantes WHERE empresa_id = ? 
+                     ORDER BY updated_at DESC, created_at DESC LIMIT 1",
+                    [$empresa['id']]
+                );
+            }
             
             $this->json([
                 'found' => true,
@@ -52,9 +62,10 @@ class ApiController extends BaseController {
             $this->json(['error' => 'Teléfono requerido'], 400);
         }
         
-        // Buscar invitado por teléfono o email
+        // Buscar invitado por teléfono o email (obtener el más reciente)
         $invitado = $this->db->fetch(
-            "SELECT * FROM invitados WHERE telefono = ? OR email = ?",
+            "SELECT * FROM invitados WHERE telefono = ? OR email = ? 
+             ORDER BY updated_at DESC, created_at DESC LIMIT 1",
             [$telefono, $telefono]
         );
         
@@ -66,6 +77,83 @@ class ApiController extends BaseController {
         } else {
             $this->json(['found' => false]);
         }
+    }
+    
+    public function buscarPorTelefono() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['error' => 'Método no permitido'], 405);
+        }
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        $telefono = $input['telefono'] ?? '';
+        
+        if (empty($telefono)) {
+            $this->json(['error' => 'Teléfono requerido'], 400);
+        }
+        
+        // Buscar primero en invitados por teléfono (obtener el más reciente)
+        $invitado = $this->db->fetch(
+            "SELECT * FROM invitados WHERE telefono = ? 
+             ORDER BY updated_at DESC, created_at DESC LIMIT 1",
+            [$telefono]
+        );
+        
+        if ($invitado) {
+            $this->json([
+                'found' => true,
+                'tipo' => 'invitado',
+                'invitado' => $invitado
+            ]);
+            return;
+        }
+        
+        // Buscar en representantes de empresas por teléfono (obtener el más reciente y datos completos de empresa)
+        $resultado = $this->db->fetch(
+            "SELECT r.*, e.* FROM representantes r 
+             INNER JOIN empresas e ON r.empresa_id = e.id 
+             WHERE r.telefono = ?
+             ORDER BY r.updated_at DESC, r.created_at DESC LIMIT 1",
+            [$telefono]
+        );
+        
+        if ($resultado) {
+            // Separar datos del representante y empresa
+            $representante = [
+                'id' => $resultado['id'],
+                'empresa_id' => $resultado['empresa_id'],
+                'nombre_completo' => $resultado['nombre_completo'],
+                'email' => $resultado['email'],
+                'telefono' => $resultado['telefono'],
+                'puesto' => $resultado['puesto'],
+                'es_contacto_principal' => $resultado['es_contacto_principal'],
+                'created_at' => $resultado['created_at'],
+                'updated_at' => $resultado['updated_at']
+            ];
+            
+            $empresa = [
+                'id' => $resultado['empresa_id'],
+                'rfc' => $resultado['rfc'],
+                'razon_social' => $resultado['razon_social'],
+                'nombre_comercial' => $resultado['nombre_comercial'],
+                'direccion_fiscal' => $resultado['direccion_fiscal'],
+                'direccion_comercial' => $resultado['direccion_comercial'],
+                'telefono_oficina' => $resultado['telefono_oficina'],
+                'giro_comercial' => $resultado['giro_comercial'],
+                'numero_afiliacion' => $resultado['numero_afiliacion'],
+                'consejero_camara' => $resultado['consejero_camara']
+            ];
+            
+            $this->json([
+                'found' => true,
+                'tipo' => 'empresa',
+                'representante' => $representante,
+                'empresa' => $empresa
+            ]);
+            return;
+        }
+        
+        $this->json(['found' => false]);
+    }
     }
     
     public function buscarPorEmail() {
@@ -80,9 +168,10 @@ class ApiController extends BaseController {
             $this->json(['error' => 'Email requerido'], 400);
         }
         
-        // Buscar primero en invitados por email o teléfono
+        // Buscar primero en invitados por email o teléfono (obtener el más reciente)
         $invitado = $this->db->fetch(
-            "SELECT * FROM invitados WHERE email = ? OR telefono = ?",
+            "SELECT * FROM invitados WHERE email = ? OR telefono = ? 
+             ORDER BY updated_at DESC, created_at DESC LIMIT 1",
             [$email, $email]
         );
         
@@ -95,19 +184,47 @@ class ApiController extends BaseController {
             return;
         }
         
-        // Buscar en representantes de empresas
-        $representante = $this->db->fetch(
-            "SELECT r.*, e.razon_social, e.rfc FROM representantes r 
+        // Buscar en representantes de empresas (obtener el más reciente y datos completos de empresa)
+        $resultado = $this->db->fetch(
+            "SELECT r.*, e.* FROM representantes r 
              INNER JOIN empresas e ON r.empresa_id = e.id 
-             WHERE r.email = ?",
+             WHERE r.email = ?
+             ORDER BY r.updated_at DESC, r.created_at DESC LIMIT 1",
             [$email]
         );
         
-        if ($representante) {
+        if ($resultado) {
+            // Separar datos del representante y empresa
+            $representante = [
+                'id' => $resultado['id'],
+                'empresa_id' => $resultado['empresa_id'],
+                'nombre_completo' => $resultado['nombre_completo'],
+                'email' => $resultado['email'],
+                'telefono' => $resultado['telefono'],
+                'puesto' => $resultado['puesto'],
+                'es_contacto_principal' => $resultado['es_contacto_principal'],
+                'created_at' => $resultado['created_at'],
+                'updated_at' => $resultado['updated_at']
+            ];
+            
+            $empresa = [
+                'id' => $resultado['empresa_id'],
+                'rfc' => $resultado['rfc'],
+                'razon_social' => $resultado['razon_social'],
+                'nombre_comercial' => $resultado['nombre_comercial'],
+                'direccion_fiscal' => $resultado['direccion_fiscal'],
+                'direccion_comercial' => $resultado['direccion_comercial'],
+                'telefono_oficina' => $resultado['telefono_oficina'],
+                'giro_comercial' => $resultado['giro_comercial'],
+                'numero_afiliacion' => $resultado['numero_afiliacion'],
+                'consejero_camara' => $resultado['consejero_camara']
+            ];
+            
             $this->json([
                 'found' => true,
                 'tipo' => 'empresa',
-                'representante' => $representante
+                'representante' => $representante,
+                'empresa' => $empresa
             ]);
             return;
         }
@@ -178,20 +295,21 @@ class ApiController extends BaseController {
                 // Actualizar empresa existente
                 $this->db->query(
                     "UPDATE empresas SET razon_social = ?, nombre_comercial = ?, direccion_fiscal = ?, 
-                     direccion_comercial = ?, telefono_oficina = ?, giro_comercial = ?, numero_afiliacion = ?, updated_at = NOW()
+                     direccion_comercial = ?, telefono_oficina = ?, giro_comercial = ?, numero_afiliacion = ?, 
+                     consejero_camara = ?, updated_at = NOW()
                      WHERE id = ?",
                     [$razonSocial, $nombreComercial, $direccionFiscal, $direccionComercial, 
-                     $telefonoOficina, $giroComercial, $numeroAfiliacion, $empresa['id']]
+                     $telefonoOficina, $giroComercial, $numeroAfiliacion, $consejeroCanaco ? 1 : 0, $empresa['id']]
                 );
                 $empresaId = $empresa['id'];
             } else {
                 // Insertar nueva empresa
                 $this->db->query(
                     "INSERT INTO empresas (rfc, razon_social, nombre_comercial, direccion_fiscal, 
-                     direccion_comercial, telefono_oficina, giro_comercial, numero_afiliacion) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                     direccion_comercial, telefono_oficina, giro_comercial, numero_afiliacion, consejero_camara) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [$rfc, $razonSocial, $nombreComercial, $direccionFiscal, $direccionComercial, 
-                     $telefonoOficina, $giroComercial, $numeroAfiliacion]
+                     $telefonoOficina, $giroComercial, $numeroAfiliacion, $consejeroCanaco ? 1 : 0]
                 );
                 $empresaId = $this->db->lastInsertId();
             }

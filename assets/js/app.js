@@ -165,7 +165,7 @@ const CANACO = {
             .then(response => response.json())
             .then(data => {
                 if (data.found) {
-                    // Pre-llenar formulario con datos existentes
+                    // Pre-llenar formulario con datos existentes de empresa
                     if (data.empresa) {
                         CANACO.registration.setFieldValue('razon_social', data.empresa.razon_social);
                         CANACO.registration.setFieldValue('nombre_comercial', data.empresa.nombre_comercial);
@@ -173,8 +173,16 @@ const CANACO = {
                         CANACO.registration.setFieldValue('direccion_fiscal', data.empresa.direccion_fiscal);
                         CANACO.registration.setFieldValue('direccion_comercial', data.empresa.direccion_comercial);
                         CANACO.registration.setFieldValue('giro_comercial', data.empresa.giro_comercial);
+                        CANACO.registration.setFieldValue('numero_afiliacion', data.empresa.numero_afiliacion);
+                        
+                        // Manejar checkbox de consejero_camara si existe en los datos
+                        const consejeroCheckbox = document.getElementById('consejero_camara');
+                        if (consejeroCheckbox && data.empresa.consejero_camara !== undefined) {
+                            consejeroCheckbox.checked = data.empresa.consejero_camara == 1;
+                        }
                     }
                     
+                    // Pre-llenar datos del representante si existen
                     if (data.representante) {
                         CANACO.registration.setFieldValue('nombre_completo', data.representante.nombre_completo);
                         CANACO.registration.setFieldValue('email', data.representante.email);
@@ -207,7 +215,7 @@ const CANACO = {
             phoneInput.placeholder = 'Buscando datos...';
             phoneInput.disabled = true;
             
-            fetch(`${CANACO.baseUrl}api/buscar-invitado`, {
+            fetch(`${CANACO.baseUrl}api/buscar-por-telefono`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -216,23 +224,52 @@ const CANACO = {
             })
             .then(response => response.json())
             .then(data => {
-                if (data.found && data.invitado) {
-                    // Mostrar modal para decidir acción
-                    if (typeof window.showExistingUserModal === 'function') {
-                        window.showExistingUserModal(data.invitado);
+                if (data.found) {
+                    if (data.tipo === 'invitado' && data.invitado) {
+                        // Mostrar modal para decidir acción si existe la función
+                        if (typeof window.showExistingUserModal === 'function') {
+                            window.showExistingUserModal(data.invitado);
+                        }
+                        
+                        // Pre-llenar formulario con datos existentes de invitado
+                        CANACO.registration.setFieldValue('nombre_completo', data.invitado.nombre_completo);
+                        CANACO.registration.setFieldValue('email', data.invitado.email);
+                        CANACO.registration.setFieldValue('ocupacion', data.invitado.ocupacion);
+                        CANACO.registration.setFieldValue('cargo_gubernamental', data.invitado.cargo_gubernamental);
+                        
+                        CANACO.utils.showAlert('✓ Datos encontrados y pre-cargados desde registros anteriores', 'success');
+                    } else if (data.tipo === 'empresa' && data.representante) {
+                        // Pre-llenar con datos del representante de la empresa
+                        CANACO.registration.setFieldValue('nombre_completo', data.representante.nombre_completo);
+                        CANACO.registration.setFieldValue('email', data.representante.email);
+                        CANACO.registration.setFieldValue('puesto', data.representante.puesto || 'Dueño o Representante Legal');
+                        
+                        // Si hay datos de empresa asociados, precargar todos los campos
+                        if (data.empresa) {
+                            CANACO.registration.setFieldValue('rfc', data.empresa.rfc);
+                            CANACO.registration.setFieldValue('razon_social', data.empresa.razon_social);
+                            CANACO.registration.setFieldValue('nombre_comercial', data.empresa.nombre_comercial);
+                            CANACO.registration.setFieldValue('direccion_fiscal', data.empresa.direccion_fiscal);
+                            CANACO.registration.setFieldValue('direccion_comercial', data.empresa.direccion_comercial);
+                            CANACO.registration.setFieldValue('telefono_oficina', data.empresa.telefono_oficina);
+                            CANACO.registration.setFieldValue('giro_comercial', data.empresa.giro_comercial);
+                            CANACO.registration.setFieldValue('numero_afiliacion', data.empresa.numero_afiliacion);
+                            
+                            // Manejar checkbox de consejero_camara si existe en los datos
+                            const consejeroCheckbox = document.getElementById('consejero_camara');
+                            if (consejeroCheckbox && data.empresa.consejero_camara !== undefined) {
+                                consejeroCheckbox.checked = data.empresa.consejero_camara == 1;
+                            }
+                        }
+                        
+                        CANACO.utils.showAlert('✓ Datos encontrados y pre-cargados desde registros anteriores', 'success');
                     }
-                    
-                    // Pre-llenar formulario con datos existentes
-                    CANACO.registration.setFieldValue('nombre_completo', data.invitado.nombre_completo);
-                    CANACO.registration.setFieldValue('email', data.invitado.email);
-                    CANACO.registration.setFieldValue('ocupacion', data.invitado.ocupacion);
-                    CANACO.registration.setFieldValue('cargo_gubernamental', data.invitado.cargo_gubernamental);
                 } else if (telefono.length >= 10) {
                     CANACO.utils.showAlert('ℹ Teléfono no encontrado en registros anteriores. Puedes continuar con el registro.', 'info');
                 }
             })
             .catch(error => {
-                console.error('Error al buscar invitado:', error);
+                console.error('Error al buscar por teléfono:', error);
                 CANACO.utils.showAlert('Error de conexión al buscar datos. Intenta nuevamente.', 'warning');
             })
             .finally(() => {
@@ -276,15 +313,22 @@ const CANACO = {
                         CANACO.registration.setFieldValue('telefono', data.representante.telefono);
                         CANACO.registration.setFieldValue('puesto', data.representante.puesto || 'Dueño o Representante Legal');
                         
-                        // Si hay datos de empresa asociados, precargar algunos campos
-                        if (data.representante.rfc) {
-                            CANACO.registration.setFieldValue('rfc', data.representante.rfc);
-                        }
-                        if (data.representante.razon_social) {
-                            CANACO.registration.setFieldValue('razon_social', data.representante.razon_social);
-                        }
-                        if (data.representante.nombre_comercial) {
-                            CANACO.registration.setFieldValue('nombre_comercial', data.representante.nombre_comercial);
+                        // Si hay datos de empresa asociados, precargar todos los campos
+                        if (data.empresa) {
+                            CANACO.registration.setFieldValue('rfc', data.empresa.rfc);
+                            CANACO.registration.setFieldValue('razon_social', data.empresa.razon_social);
+                            CANACO.registration.setFieldValue('nombre_comercial', data.empresa.nombre_comercial);
+                            CANACO.registration.setFieldValue('direccion_fiscal', data.empresa.direccion_fiscal);
+                            CANACO.registration.setFieldValue('direccion_comercial', data.empresa.direccion_comercial);
+                            CANACO.registration.setFieldValue('telefono_oficina', data.empresa.telefono_oficina);
+                            CANACO.registration.setFieldValue('giro_comercial', data.empresa.giro_comercial);
+                            CANACO.registration.setFieldValue('numero_afiliacion', data.empresa.numero_afiliacion);
+                            
+                            // Manejar checkbox de consejero_camara si existe en los datos
+                            const consejeroCheckbox = document.getElementById('consejero_camara');
+                            if (consejeroCheckbox && data.empresa.consejero_camara !== undefined) {
+                                consejeroCheckbox.checked = data.empresa.consejero_camara == 1;
+                            }
                         }
                         
                         CANACO.utils.showAlert('✓ Datos encontrados y pre-cargados desde registros anteriores', 'success');

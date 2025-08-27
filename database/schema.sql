@@ -53,6 +53,7 @@ CREATE TABLE `empresas` (
   `telefono_oficina` varchar(20) DEFAULT NULL,
   `giro_comercial` varchar(100) DEFAULT NULL,
   `numero_afiliacion` varchar(50) DEFAULT NULL,
+  `consejero_camara` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
