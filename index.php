@@ -52,6 +52,7 @@ $router->add('buscar-historial-boletos', 'PublicController@searchTicketHistory')
 // Rutas API
 $router->add('api/buscar-empresa', 'ApiController@buscarEmpresa');
 $router->add('api/buscar-invitado', 'ApiController@buscarInvitado');
+$router->add('api/buscar-por-email', 'ApiController@buscarPorEmail');
 $router->add('api/registro-empresa', 'ApiController@registroEmpresa');
 $router->add('api/registro-invitado', 'ApiController@registroInvitado');
 
