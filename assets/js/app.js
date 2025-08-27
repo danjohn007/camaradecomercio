@@ -164,25 +164,26 @@ const CANACO = {
             })
             .then(response => response.json())
             .then(data => {
-                if (data.found) {
-                    // Pre-llenar formulario con datos existentes
-                    if (data.empresa) {
-                        CANACO.registration.setFieldValue('razon_social', data.empresa.razon_social);
-                        CANACO.registration.setFieldValue('nombre_comercial', data.empresa.nombre_comercial);
-                        CANACO.registration.setFieldValue('telefono_oficina', data.empresa.telefono_oficina);
-                        CANACO.registration.setFieldValue('direccion_fiscal', data.empresa.direccion_fiscal);
-                        CANACO.registration.setFieldValue('direccion_comercial', data.empresa.direccion_comercial);
-                        CANACO.registration.setFieldValue('giro_comercial', data.empresa.giro_comercial);
-                    }
+                if (data.found && data.data) {
+                    // Pre-llenar formulario con datos consolidados más recientes
+                    const consolidated = data.data;
                     
-                    if (data.representante) {
-                        CANACO.registration.setFieldValue('nombre_completo', data.representante.nombre_completo);
-                        CANACO.registration.setFieldValue('email', data.representante.email);
-                        CANACO.registration.setFieldValue('telefono', data.representante.telefono);
-                        CANACO.registration.setFieldValue('puesto', data.representante.puesto);
-                    }
+                    // Campos de empresa
+                    if (consolidated.razon_social) CANACO.registration.setFieldValue('razon_social', consolidated.razon_social);
+                    if (consolidated.nombre_comercial) CANACO.registration.setFieldValue('nombre_comercial', consolidated.nombre_comercial);
+                    if (consolidated.telefono_oficina) CANACO.registration.setFieldValue('telefono_oficina', consolidated.telefono_oficina);
+                    if (consolidated.direccion_fiscal) CANACO.registration.setFieldValue('direccion_fiscal', consolidated.direccion_fiscal);
+                    if (consolidated.direccion_comercial) CANACO.registration.setFieldValue('direccion_comercial', consolidated.direccion_comercial);
+                    if (consolidated.giro_comercial) CANACO.registration.setFieldValue('giro_comercial', consolidated.giro_comercial);
+                    if (consolidated.numero_afiliacion) CANACO.registration.setFieldValue('numero_afiliacion', consolidated.numero_afiliacion);
                     
-                    CANACO.utils.showAlert('✓ Datos encontrados y pre-cargados desde registros anteriores', 'success');
+                    // Campos de representante
+                    if (consolidated.nombre_completo) CANACO.registration.setFieldValue('nombre_completo', consolidated.nombre_completo);
+                    if (consolidated.email) CANACO.registration.setFieldValue('email', consolidated.email);
+                    if (consolidated.telefono) CANACO.registration.setFieldValue('telefono', consolidated.telefono);
+                    if (consolidated.puesto) CANACO.registration.setFieldValue('puesto', consolidated.puesto);
+                    
+                    CANACO.utils.showAlert(`✓ Datos encontrados y pre-cargados desde ${data.sources} fuente(s) de registros anteriores`, 'success');
                 } else if (rfc.length >= 12) {
                     CANACO.utils.showAlert('ℹ RFC no encontrado en registros anteriores. Puedes continuar con el registro.', 'info');
                 }
@@ -207,7 +208,7 @@ const CANACO = {
             phoneInput.placeholder = 'Buscando datos...';
             phoneInput.disabled = true;
             
-            fetch(`${CANACO.baseUrl}api/buscar-invitado`, {
+            fetch(`${CANACO.baseUrl}api/buscar-por-telefono`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -216,23 +217,34 @@ const CANACO = {
             })
             .then(response => response.json())
             .then(data => {
-                if (data.found && data.invitado) {
-                    // Mostrar modal para decidir acción
-                    if (typeof window.showExistingUserModal === 'function') {
-                        window.showExistingUserModal(data.invitado);
-                    }
+                if (data.found && data.data) {
+                    // Pre-llenar formulario con datos consolidados más recientes
+                    const consolidated = data.data;
                     
-                    // Pre-llenar formulario con datos existentes
-                    CANACO.registration.setFieldValue('nombre_completo', data.invitado.nombre_completo);
-                    CANACO.registration.setFieldValue('email', data.invitado.email);
-                    CANACO.registration.setFieldValue('ocupacion', data.invitado.ocupacion);
-                    CANACO.registration.setFieldValue('cargo_gubernamental', data.invitado.cargo_gubernamental);
+                    // Campos de persona/representante
+                    if (consolidated.nombre_completo) CANACO.registration.setFieldValue('nombre_completo', consolidated.nombre_completo);
+                    if (consolidated.email) CANACO.registration.setFieldValue('email', consolidated.email);
+                    if (consolidated.puesto) CANACO.registration.setFieldValue('puesto', consolidated.puesto);
+                    if (consolidated.ocupacion) CANACO.registration.setFieldValue('ocupacion', consolidated.ocupacion);
+                    if (consolidated.cargo_gubernamental) CANACO.registration.setFieldValue('cargo_gubernamental', consolidated.cargo_gubernamental);
+                    
+                    // Campos de empresa (si están disponibles)
+                    if (consolidated.rfc) CANACO.registration.setFieldValue('rfc', consolidated.rfc);
+                    if (consolidated.razon_social) CANACO.registration.setFieldValue('razon_social', consolidated.razon_social);
+                    if (consolidated.nombre_comercial) CANACO.registration.setFieldValue('nombre_comercial', consolidated.nombre_comercial);
+                    if (consolidated.telefono_oficina) CANACO.registration.setFieldValue('telefono_oficina', consolidated.telefono_oficina);
+                    if (consolidated.direccion_fiscal) CANACO.registration.setFieldValue('direccion_fiscal', consolidated.direccion_fiscal);
+                    if (consolidated.direccion_comercial) CANACO.registration.setFieldValue('direccion_comercial', consolidated.direccion_comercial);
+                    if (consolidated.giro_comercial) CANACO.registration.setFieldValue('giro_comercial', consolidated.giro_comercial);
+                    if (consolidated.numero_afiliacion) CANACO.registration.setFieldValue('numero_afiliacion', consolidated.numero_afiliacion);
+                    
+                    CANACO.utils.showAlert(`✓ Datos encontrados y pre-cargados desde ${data.sources} fuente(s) de registros anteriores`, 'success');
                 } else if (telefono.length >= 10) {
                     CANACO.utils.showAlert('ℹ Teléfono no encontrado en registros anteriores. Puedes continuar con el registro.', 'info');
                 }
             })
             .catch(error => {
-                console.error('Error al buscar invitado:', error);
+                console.error('Error al buscar por teléfono:', error);
                 CANACO.utils.showAlert('Error de conexión al buscar datos. Intenta nuevamente.', 'warning');
             })
             .finally(() => {
@@ -260,35 +272,28 @@ const CANACO = {
             })
             .then(response => response.json())
             .then(data => {
-                if (data.found) {
-                    if (data.tipo === 'invitado' && data.invitado) {
-                        // Pre-llenar formulario con datos de invitado
-                        CANACO.registration.setFieldValue('nombre_completo', data.invitado.nombre_completo);
-                        CANACO.registration.setFieldValue('telefono', data.invitado.telefono);
-                        CANACO.registration.setFieldValue('ocupacion', data.invitado.ocupacion);
-                        CANACO.registration.setFieldValue('puesto', data.invitado.ocupacion);
-                        CANACO.registration.setFieldValue('cargo_gubernamental', data.invitado.cargo_gubernamental);
-                        
-                        CANACO.utils.showAlert('✓ Datos encontrados y pre-cargados desde registros anteriores', 'success');
-                    } else if (data.tipo === 'empresa' && data.representante) {
-                        // Pre-llenar con datos del representante de la empresa
-                        CANACO.registration.setFieldValue('nombre_completo', data.representante.nombre_completo);
-                        CANACO.registration.setFieldValue('telefono', data.representante.telefono);
-                        CANACO.registration.setFieldValue('puesto', data.representante.puesto || 'Dueño o Representante Legal');
-                        
-                        // Si hay datos de empresa asociados, precargar algunos campos
-                        if (data.representante.rfc) {
-                            CANACO.registration.setFieldValue('rfc', data.representante.rfc);
-                        }
-                        if (data.representante.razon_social) {
-                            CANACO.registration.setFieldValue('razon_social', data.representante.razon_social);
-                        }
-                        if (data.representante.nombre_comercial) {
-                            CANACO.registration.setFieldValue('nombre_comercial', data.representante.nombre_comercial);
-                        }
-                        
-                        CANACO.utils.showAlert('✓ Datos encontrados y pre-cargados desde registros anteriores', 'success');
-                    }
+                if (data.found && data.data) {
+                    // Pre-llenar formulario con datos consolidados más recientes
+                    const consolidated = data.data;
+                    
+                    // Campos de persona/representante
+                    if (consolidated.nombre_completo) CANACO.registration.setFieldValue('nombre_completo', consolidated.nombre_completo);
+                    if (consolidated.telefono) CANACO.registration.setFieldValue('telefono', consolidated.telefono);
+                    if (consolidated.puesto) CANACO.registration.setFieldValue('puesto', consolidated.puesto);
+                    if (consolidated.ocupacion) CANACO.registration.setFieldValue('ocupacion', consolidated.ocupacion);
+                    if (consolidated.cargo_gubernamental) CANACO.registration.setFieldValue('cargo_gubernamental', consolidated.cargo_gubernamental);
+                    
+                    // Campos de empresa (si están disponibles)
+                    if (consolidated.rfc) CANACO.registration.setFieldValue('rfc', consolidated.rfc);
+                    if (consolidated.razon_social) CANACO.registration.setFieldValue('razon_social', consolidated.razon_social);
+                    if (consolidated.nombre_comercial) CANACO.registration.setFieldValue('nombre_comercial', consolidated.nombre_comercial);
+                    if (consolidated.telefono_oficina) CANACO.registration.setFieldValue('telefono_oficina', consolidated.telefono_oficina);
+                    if (consolidated.direccion_fiscal) CANACO.registration.setFieldValue('direccion_fiscal', consolidated.direccion_fiscal);
+                    if (consolidated.direccion_comercial) CANACO.registration.setFieldValue('direccion_comercial', consolidated.direccion_comercial);
+                    if (consolidated.giro_comercial) CANACO.registration.setFieldValue('giro_comercial', consolidated.giro_comercial);
+                    if (consolidated.numero_afiliacion) CANACO.registration.setFieldValue('numero_afiliacion', consolidated.numero_afiliacion);
+                    
+                    CANACO.utils.showAlert(`✓ Datos encontrados y pre-cargados desde ${data.sources} fuente(s) de registros anteriores`, 'success');
                 } else {
                     CANACO.utils.showAlert('ℹ Email no encontrado en registros anteriores. Puedes continuar con el registro.', 'info');
                 }
@@ -301,36 +306,6 @@ const CANACO = {
                 // Restaurar input
                 emailInput.placeholder = originalPlaceholder;
                 emailInput.disabled = false;
-            });
-        },
-        
-        searchByRFC: function(rfc, eventSlug) {
-            if (rfc.length < 12) return;
-            
-            fetch(`${CANACO.baseUrl}api/buscar-empresa`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ rfc: rfc })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.found && data.representante) {
-                    // Pre-llenar con datos del representante de la empresa
-                    CANACO.registration.setFieldValue('nombre_completo', data.representante.nombre_completo);
-                    CANACO.registration.setFieldValue('email', data.representante.email);
-                    CANACO.registration.setFieldValue('telefono', data.representante.telefono);
-                    CANACO.registration.setFieldValue('ocupacion', 'Dueño o Representante Legal');
-                    
-                    CANACO.utils.showAlert('📋 Datos de empresa encontrados. Complete el registro como invitado con los datos pre-llenados.', 'info');
-                } else {
-                    CANACO.utils.showAlert('ℹ RFC no encontrado. Puede continuar con el registro como invitado.', 'info');
-                }
-            })
-            .catch(error => {
-                console.error('Error al buscar empresa:', error);
-                CANACO.utils.showAlert('Error de conexión al buscar datos. Intenta nuevamente.', 'warning');
             });
         }
     },

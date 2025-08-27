@@ -17,24 +17,11 @@ class ApiController extends BaseController {
             $this->json(['error' => 'RFC requerido'], 400);
         }
         
-        // Buscar empresa por RFC
-        $empresa = $this->db->fetch(
-            "SELECT * FROM empresas WHERE rfc = ?",
-            [$rfc]
-        );
+        // Buscar de forma comprehensive por RFC
+        $result = $this->buscarDatosComprehensivos($rfc, 'rfc');
         
-        if ($empresa) {
-            // Buscar representante principal
-            $representante = $this->db->fetch(
-                "SELECT * FROM representantes WHERE empresa_id = ? AND es_contacto_principal = 1",
-                [$empresa['id']]
-            );
-            
-            $this->json([
-                'found' => true,
-                'empresa' => $empresa,
-                'representante' => $representante
-            ]);
+        if ($result['found']) {
+            $this->json($result);
         } else {
             $this->json(['found' => false]);
         }
@@ -52,17 +39,11 @@ class ApiController extends BaseController {
             $this->json(['error' => 'Teléfono requerido'], 400);
         }
         
-        // Buscar invitado por teléfono o email
-        $invitado = $this->db->fetch(
-            "SELECT * FROM invitados WHERE telefono = ? OR email = ?",
-            [$telefono, $telefono]
-        );
+        // Usar la nueva búsqueda comprehensive por teléfono
+        $result = $this->buscarDatosComprehensivos($telefono, 'telefono');
         
-        if ($invitado) {
-            $this->json([
-                'found' => true,
-                'invitado' => $invitado
-            ]);
+        if ($result['found']) {
+            $this->json($result);
         } else {
             $this->json(['found' => false]);
         }
@@ -80,39 +61,174 @@ class ApiController extends BaseController {
             $this->json(['error' => 'Email requerido'], 400);
         }
         
-        // Buscar primero en invitados por email o teléfono
-        $invitado = $this->db->fetch(
-            "SELECT * FROM invitados WHERE email = ? OR telefono = ?",
-            [$email, $email]
-        );
+        // Buscar de forma comprehensive en TODAS las tablas relevantes
+        $result = $this->buscarDatosComprehensivos($email, 'email');
         
-        if ($invitado) {
-            $this->json([
-                'found' => true,
-                'tipo' => 'invitado',
-                'invitado' => $invitado
-            ]);
-            return;
+        if ($result['found']) {
+            $this->json($result);
+        } else {
+            $this->json(['found' => false]);
+        }
+    }
+    
+    public function buscarPorTelefono() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['error' => 'Método no permitido'], 405);
         }
         
-        // Buscar en representantes de empresas
-        $representante = $this->db->fetch(
-            "SELECT r.*, e.razon_social, e.rfc FROM representantes r 
-             INNER JOIN empresas e ON r.empresa_id = e.id 
-             WHERE r.email = ?",
-            [$email]
-        );
+        $input = json_decode(file_get_contents('php://input'), true);
+        $telefono = $input['telefono'] ?? '';
         
-        if ($representante) {
-            $this->json([
-                'found' => true,
-                'tipo' => 'empresa',
-                'representante' => $representante
-            ]);
-            return;
+        if (empty($telefono)) {
+            $this->json(['error' => 'Teléfono requerido'], 400);
         }
         
-        $this->json(['found' => false]);
+        // Buscar de forma comprehensive en TODAS las tablas relevantes
+        $result = $this->buscarDatosComprehensivos($telefono, 'telefono');
+        
+        if ($result['found']) {
+            $this->json($result);
+        } else {
+            $this->json(['found' => false]);
+        }
+    }
+    
+    private function buscarDatosComprehensivos($valor, $tipo) {
+        // Inicializar el resultado con los datos más recientes encontrados
+        $resultado = [
+            'found' => false,
+            'data' => []
+        ];
+        
+        // 1. Buscar en todas las tablas según el tipo de búsqueda
+        $invitados = [];
+        $representantes = [];
+        $empresas = [];
+        
+        if ($tipo === 'email') {
+            // Buscar por email en invitados
+            $invitados = $this->db->fetchAll(
+                "SELECT *, 'invitado' as fuente, updated_at as fecha_actualizacion FROM invitados WHERE email = ? ORDER BY updated_at DESC",
+                [$valor]
+            );
+            
+            // Buscar por email en representantes (con datos de empresa)
+            $representantes = $this->db->fetchAll(
+                "SELECT r.*, e.rfc, e.razon_social, e.nombre_comercial, e.direccion_fiscal, 
+                        e.direccion_comercial, e.telefono_oficina, e.giro_comercial, e.numero_afiliacion,
+                        'representante' as fuente, r.updated_at as fecha_actualizacion
+                 FROM representantes r 
+                 INNER JOIN empresas e ON r.empresa_id = e.id 
+                 WHERE r.email = ? 
+                 ORDER BY r.updated_at DESC",
+                [$valor]
+            );
+        } else if ($tipo === 'telefono') {
+            // Buscar por teléfono en invitados
+            $invitados = $this->db->fetchAll(
+                "SELECT *, 'invitado' as fuente, updated_at as fecha_actualizacion FROM invitados WHERE telefono = ? ORDER BY updated_at DESC",
+                [$valor]
+            );
+            
+            // Buscar por teléfono en representantes (con datos de empresa)
+            $representantes = $this->db->fetchAll(
+                "SELECT r.*, e.rfc, e.razon_social, e.nombre_comercial, e.direccion_fiscal, 
+                        e.direccion_comercial, e.telefono_oficina, e.giro_comercial, e.numero_afiliacion,
+                        'representante' as fuente, r.updated_at as fecha_actualizacion
+                 FROM representantes r 
+                 INNER JOIN empresas e ON r.empresa_id = e.id 
+                 WHERE r.telefono = ? 
+                 ORDER BY r.updated_at DESC",
+                [$valor]
+            );
+            
+            // También buscar en empresas por teléfono de oficina
+            $empresas = $this->db->fetchAll(
+                "SELECT *, 'empresa' as fuente, updated_at as fecha_actualizacion FROM empresas WHERE telefono_oficina = ? ORDER BY updated_at DESC",
+                [$valor]
+            );
+        } else if ($tipo === 'rfc') {
+            // Buscar por RFC en empresas
+            $empresas = $this->db->fetchAll(
+                "SELECT *, 'empresa' as fuente, updated_at as fecha_actualizacion FROM empresas WHERE rfc = ? ORDER BY updated_at DESC",
+                [$valor]
+            );
+            
+            // Buscar representantes de empresas con este RFC
+            $representantes = $this->db->fetchAll(
+                "SELECT r.*, e.rfc, e.razon_social, e.nombre_comercial, e.direccion_fiscal, 
+                        e.direccion_comercial, e.telefono_oficina, e.giro_comercial, e.numero_afiliacion,
+                        'representante' as fuente, r.updated_at as fecha_actualizacion
+                 FROM representantes r 
+                 INNER JOIN empresas e ON r.empresa_id = e.id 
+                 WHERE e.rfc = ? 
+                 ORDER BY r.updated_at DESC",
+                [$valor]
+            );
+        }
+        
+        // 2. Consolidar todos los resultados
+        $todosLosResultados = [];
+        if (!empty($invitados)) $todosLosResultados = array_merge($todosLosResultados, $invitados);
+        if (!empty($representantes)) $todosLosResultados = array_merge($todosLosResultados, $representantes);
+        if (!empty($empresas)) $todosLosResultados = array_merge($todosLosResultados, $empresas);
+        
+        if (empty($todosLosResultados)) {
+            return ['found' => false];
+        }
+        
+        // 3. Ordenar por fecha de actualización (más reciente primero)
+        usort($todosLosResultados, function($a, $b) {
+            return strtotime($b['fecha_actualizacion']) - strtotime($a['fecha_actualizacion']);
+        });
+        
+        // 4. Consolidar datos tomando la información más reciente para cada campo
+        $datosConsolidados = $this->consolidarDatosMasRecientes($todosLosResultados);
+        
+        return [
+            'found' => true,
+            'data' => $datosConsolidados,
+            'sources' => count($todosLosResultados) // Número de fuentes encontradas
+        ];
+    }
+    
+    private function consolidarDatosMasRecientes($resultados) {
+        $consolidado = [];
+        $camposConFecha = [];
+        
+        // Definir mapeo de campos importantes
+        $camposImportantes = [
+            // Campos de persona/representante
+            'nombre_completo', 'email', 'telefono', 'puesto', 'ocupacion', 'cargo_gubernamental',
+            // Campos de empresa
+            'rfc', 'razon_social', 'nombre_comercial', 'direccion_fiscal', 'direccion_comercial',
+            'telefono_oficina', 'giro_comercial', 'numero_afiliacion'
+        ];
+        
+        // Iterar por cada resultado (ya ordenados por fecha)
+        foreach ($resultados as $resultado) {
+            foreach ($camposImportantes as $campo) {
+                // Solo tomar el valor si el campo existe, no está vacío y no hemos tomado un valor más reciente
+                if (isset($resultado[$campo]) && 
+                    !empty($resultado[$campo]) && 
+                    !isset($consolidado[$campo])) {
+                    
+                    $consolidado[$campo] = $resultado[$campo];
+                    $camposConFecha[$campo] = $resultado['fecha_actualizacion'];
+                }
+            }
+            
+            // Guardar información sobre la fuente si no existe
+            if (!isset($consolidado['fuente_principal'])) {
+                $consolidado['fuente_principal'] = $resultado['fuente'];
+            }
+        }
+        
+        // Agregar información adicional
+        $consolidado['fechas_campos'] = $camposConFecha;
+        $consolidado['total_fuentes'] = count($resultados);
+        
+        return $consolidado;
     }
     
     
