@@ -238,6 +238,53 @@ const CANACO = {
                 phoneInput.placeholder = originalPlaceholder;
                 phoneInput.disabled = false;
             });
+        },
+        
+        searchByEmail: function(email, eventSlug) {
+            if (email.length < 5 || !CANACO.validation.validateEmail(email)) return;
+            
+            // Mostrar indicador de carga
+            const emailInput = document.getElementById('email');
+            const originalPlaceholder = emailInput.placeholder;
+            emailInput.placeholder = 'Buscando datos...';
+            emailInput.disabled = true;
+            
+            fetch(`${CANACO.baseUrl}api/buscar-por-email`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: email })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.found) {
+                    if (data.tipo === 'invitado' && data.invitado) {
+                        // Pre-llenar formulario con datos de invitado
+                        CANACO.registration.setFieldValue('nombre_completo', data.invitado.nombre_completo);
+                        CANACO.registration.setFieldValue('telefono', data.invitado.telefono);
+                        CANACO.registration.setFieldValue('fecha_nacimiento', data.invitado.fecha_nacimiento);
+                        CANACO.registration.setFieldValue('ocupacion', data.invitado.ocupacion);
+                        CANACO.registration.setFieldValue('cargo_gubernamental', data.invitado.cargo_gubernamental);
+                        
+                        CANACO.utils.showAlert('✓ Datos encontrados y pre-cargados desde registros anteriores', 'success');
+                    } else if (data.tipo === 'empresa' && data.representante) {
+                        // Si es email de empresa, sugerir registro de empresa
+                        CANACO.utils.showAlert('📋 Este email pertenece a una empresa registrada. Te recomendamos usar el registro de empresa.', 'info');
+                    }
+                } else {
+                    CANACO.utils.showAlert('ℹ Email no encontrado en registros anteriores. Puedes continuar con el registro.', 'info');
+                }
+            })
+            .catch(error => {
+                console.error('Error al buscar por email:', error);
+                CANACO.utils.showAlert('Error de conexión al buscar datos. Intenta nuevamente.', 'warning');
+            })
+            .finally(() => {
+                // Restaurar input
+                emailInput.placeholder = originalPlaceholder;
+                emailInput.disabled = false;
+            });
         }
     },
     
@@ -362,6 +409,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     CANACO.registration.searchByPhone(this.value, eventSlug);
                 }
             }, 500);
+        });
+    }
+    
+    const emailSearchInput = document.getElementById('email');
+    if (emailSearchInput && emailSearchInput.dataset.eventSlug) {
+        let timeout;
+        emailSearchInput.addEventListener('input', function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                const eventSlug = this.dataset.eventSlug;
+                if (this.value.length > 5 && CANACO.validation.validateEmail(this.value)) {
+                    CANACO.registration.searchByEmail(this.value, eventSlug);
+                }
+            }, 800);
         });
     }
 });

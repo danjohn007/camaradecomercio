@@ -93,33 +93,44 @@
                             <p class="text-muted">Lo sentimos, ya no hay cupos disponibles para este evento.</p>
                         </div>
                     <?php else: ?>
-                        <h3 class="mb-4 text-canaco">¿Eres empresa o invitado general?</h3>
+                        <h3 class="mb-4 text-canaco">Buscar registro existente</h3>
                         
-                        <form id="registrationTypeForm">
+                        <form id="registrationSearchForm">
                             <div class="row g-3">
-                                <div class="col-8">
-                                    <select class="form-select form-select-lg" id="tipoRegistrante" name="tipo_registrante" required>
-                                        <option value="">Selecciona una opción</option>
-                                        <?php if ($evento['tipo_publico'] === 'todos' || $evento['tipo_publico'] === 'empresas'): ?>
-                                            <option value="empresa">Empresa</option>
-                                        <?php endif; ?>
-                                        <?php if ($evento['tipo_publico'] === 'todos' || $evento['tipo_publico'] === 'invitados'): ?>
-                                            <option value="invitado">Invitado general</option>
-                                        <?php endif; ?>
-                                    </select>
-                                </div>
-                                
-                                <div class="col-4" id="searchContainer" style="display: none;">
-                                    <input type="text" class="form-control form-control-lg" id="searchInput" 
-                                           placeholder="Ingrese su RFC" readonly>
+                                <div class="col-12">
+                                    <div class="input-group input-group-lg">
+                                        <input type="text" class="form-control form-control-lg" id="searchInput" 
+                                               placeholder="Ingrese su teléfono o correo electrónico" 
+                                               data-event-slug="<?php echo $evento['slug']; ?>">
+                                        <button type="button" class="btn btn-canaco" id="btnBuscar">
+                                            <i class="fas fa-search me-2"></i>
+                                            Buscar
+                                        </button>
+                                    </div>
+                                    <div class="form-text">
+                                        Si ya tiene registros previos, se pre-cargarán sus datos automáticamente
+                                    </div>
                                 </div>
                             </div>
                             
-                            <div class="row g-3 mt-3" id="buttonContainer" style="display: none;">
-                                <div class="col-12">
-                                    <button type="button" class="btn btn-canaco btn-lg w-100" id="btnObtenerBoleto">
-                                        Obtener boleto
-                                    </button>
+                            <div class="row g-3 mt-3">
+                                <div class="col-md-6">
+                                    <?php if ($evento['tipo_publico'] === 'todos' || $evento['tipo_publico'] === 'empresas'): ?>
+                                        <a href="<?php echo BASE_URL; ?>registro/empresa/<?php echo $evento['slug']; ?>" 
+                                           class="btn btn-outline-canaco btn-lg w-100">
+                                            <i class="fas fa-building me-2"></i>
+                                            Registro de Empresa
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="col-md-6">
+                                    <?php if ($evento['tipo_publico'] === 'todos' || $evento['tipo_publico'] === 'invitados'): ?>
+                                        <a href="<?php echo BASE_URL; ?>registro/invitado/<?php echo $evento['slug']; ?>" 
+                                           class="btn btn-outline-canaco btn-lg w-100">
+                                            <i class="fas fa-user me-2"></i>
+                                            Registro de Invitado
+                                        </a>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </form>
@@ -161,59 +172,78 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const tipoSelect = document.getElementById('tipoRegistrante');
-    const searchContainer = document.getElementById('searchContainer');
     const searchInput = document.getElementById('searchInput');
-    const buttonContainer = document.getElementById('buttonContainer');
-    const btnObtener = document.getElementById('btnObtenerBoleto');
+    const btnBuscar = document.getElementById('btnBuscar');
     
-    tipoSelect.addEventListener('change', function() {
-        const tipo = this.value;
-        
-        if (tipo) {
-            searchContainer.style.display = 'block';
-            buttonContainer.style.display = 'block';
-            searchInput.readOnly = false;
-            
-            if (tipo === 'empresa') {
-                searchInput.placeholder = 'Ingrese su RFC';
-                searchInput.maxLength = 13;
-            } else {
-                searchInput.placeholder = 'Ingrese su teléfono';
-                searchInput.maxLength = 10;
+    if (!searchInput || !btnBuscar) return;
+    
+    // Auto-search functionality with timeout
+    let searchTimeout;
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const query = this.value.trim();
+            if (query.length >= 10) { // Minimum length for phone or reasonable email
+                performSearch(query);
             }
-        } else {
-            searchContainer.style.display = 'none';
-            buttonContainer.style.display = 'none';
-            searchInput.readOnly = true;
-        }
+        }, 800); // Wait 800ms after user stops typing
     });
     
-    btnObtener.addEventListener('click', function() {
-        const tipo = tipoSelect.value;
-        const identificador = searchInput.value.trim();
-        
-        if (!tipo || !identificador) {
-            alert('Por favor complete todos los campos');
+    // Manual search when button is clicked
+    btnBuscar.addEventListener('click', function() {
+        const query = searchInput.value.trim();
+        if (query.length < 3) {
+            alert('Por favor ingrese al menos 3 caracteres para buscar');
             return;
         }
-        
-        // Redirigir al formulario correspondiente
-        const eventSlug = '<?php echo $evento['slug']; ?>';
-        if (tipo === 'empresa') {
-            window.location.href = `<?php echo BASE_URL; ?>registro/empresa/${eventSlug}?rfc=${encodeURIComponent(identificador)}`;
-        } else {
-            window.location.href = `<?php echo BASE_URL; ?>registro/invitado/${eventSlug}?telefono=${encodeURIComponent(identificador)}`;
+        performSearch(query);
+    });
+    
+    // Enter key triggers search
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            btnBuscar.click();
         }
     });
     
-    // Formato para RFC (mayúsculas)
-    searchInput.addEventListener('input', function() {
-        if (tipoSelect.value === 'empresa') {
-            this.value = this.value.toUpperCase();
-        } else if (tipoSelect.value === 'invitado') {
-            this.value = this.value.replace(/\D/g, ''); // Solo números
+    function performSearch(query) {
+        const eventSlug = searchInput.dataset.eventSlug;
+        
+        // Show loading state
+        const originalText = btnBuscar.innerHTML;
+        btnBuscar.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Buscando...';
+        btnBuscar.disabled = true;
+        
+        // Determine if query is email or phone
+        const isEmail = query.includes('@');
+        const isPhone = /^[0-9]{10}$/.test(query.replace(/\D/g, ''));
+        
+        if (isEmail) {
+            // Search by email (could be either company or guest)
+            searchByEmail(query, eventSlug);
+        } else if (isPhone) {
+            // Search by phone (guest registration)
+            const phoneOnly = query.replace(/\D/g, '');
+            window.location.href = `<?php echo BASE_URL; ?>registro/invitado/${eventSlug}?telefono=${encodeURIComponent(phoneOnly)}`;
+        } else if (query.length >= 12) {
+            // Assume it's RFC (company registration)
+            window.location.href = `<?php echo BASE_URL; ?>registro/empresa/${eventSlug}?rfc=${encodeURIComponent(query.toUpperCase())}`;
+        } else {
+            alert('Por favor ingrese un teléfono (10 dígitos), correo electrónico o RFC válido');
         }
-    });
+        
+        // Restore button state
+        setTimeout(() => {
+            btnBuscar.innerHTML = originalText;
+            btnBuscar.disabled = false;
+        }, 2000);
+    }
+    
+    function searchByEmail(email, eventSlug) {
+        // Try to determine if email belongs to company or guest
+        // For now, we'll default to guest registration with email pre-filled
+        window.location.href = `<?php echo BASE_URL; ?>registro/invitado/${eventSlug}?email=${encodeURIComponent(email)}`;
+    }
 });
 </script>

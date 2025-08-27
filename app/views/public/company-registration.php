@@ -54,15 +54,11 @@ $rfc = $_GET['rfc'] ?? '';
                                     <label for="puesto" class="form-label">Usted es *</label>
                                     <select class="form-select form-control-lg" id="puesto" name="puesto" required>
                                         <option value="">Seleccione su puesto</option>
-                                        <option value="Dueño de la empresa">Dueño de la empresa</option>
-                                        <option value="Director General">Director General</option>
-                                        <option value="Gerente General">Gerente General</option>
-                                        <option value="Gerente de Ventas">Gerente de Ventas</option>
-                                        <option value="Gerente de Marketing">Gerente de Marketing</option>
-                                        <option value="Gerente de Operaciones">Gerente de Operaciones</option>
-                                        <option value="Coordinador">Coordinador</option>
-                                        <option value="Empleado">Empleado</option>
-                                        <option value="Otro">Otro</option>
+                                        <option value="Dueño o Representante Legal">Dueño o Representante Legal</option>
+                                        <option value="Socio o Accionista">Socio o Accionista</option>
+                                        <option value="Colaborador/Empleado">Colaborador/Empleado</option>
+                                        <option value="Funcionario de Gobierno">Funcionario de Gobierno</option>
+                                        <option value="Invitado General">Invitado General</option>
                                     </select>
                                 </div>
                                 

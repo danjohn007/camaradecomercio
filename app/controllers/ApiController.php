@@ -68,6 +68,54 @@ class ApiController extends BaseController {
         }
     }
     
+    public function buscarPorEmail() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['error' => 'Método no permitido'], 405);
+        }
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        $email = $input['email'] ?? '';
+        
+        if (empty($email)) {
+            $this->json(['error' => 'Email requerido'], 400);
+        }
+        
+        // Buscar primero en invitados
+        $invitado = $this->db->fetch(
+            "SELECT * FROM invitados WHERE email = ?",
+            [$email]
+        );
+        
+        if ($invitado) {
+            $this->json([
+                'found' => true,
+                'tipo' => 'invitado',
+                'invitado' => $invitado
+            ]);
+            return;
+        }
+        
+        // Buscar en representantes de empresas
+        $representante = $this->db->fetch(
+            "SELECT r.*, e.razon_social, e.rfc FROM representantes r 
+             INNER JOIN empresas e ON r.empresa_id = e.id 
+             WHERE r.email = ?",
+            [$email]
+        );
+        
+        if ($representante) {
+            $this->json([
+                'found' => true,
+                'tipo' => 'empresa',
+                'representante' => $representante
+            ]);
+            return;
+        }
+        
+        $this->json(['found' => false]);
+    }
+    
+    
     public function registroEmpresa() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $_SESSION['error'] = 'Método no permitido';

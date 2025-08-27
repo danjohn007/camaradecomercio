@@ -1,6 +1,7 @@
 <?php 
 $pageTitle = 'Registro de Invitado - ' . htmlspecialchars($evento['titulo']); 
 $telefono = $_GET['telefono'] ?? '';
+$email = $_GET['email'] ?? '';
 ?>
 
 <div class="container-fluid py-4" style="background-color: #f8f9fa;">
@@ -49,7 +50,9 @@ $telefono = $_GET['telefono'] ?? '';
                                 <div class="col-md-6">
                                     <label for="email" class="form-label">Correo electrónico *</label>
                                     <input type="email" class="form-control form-control-lg" id="email" 
-                                           name="email" required placeholder="Ingresa tu correo electrónico">
+                                           name="email" required placeholder="Ingresa tu correo electrónico"
+                                           value="<?php echo htmlspecialchars($email); ?>"
+                                           data-event-slug="<?php echo $evento['slug']; ?>">
                                 </div>
                                 
                                 <div class="col-md-6">
@@ -71,15 +74,11 @@ $telefono = $_GET['telefono'] ?? '';
                                     <label for="ocupacion" class="form-label">Usted es *</label>
                                     <select class="form-select form-control-lg" id="ocupacion" name="ocupacion" required>
                                         <option value="">Seleccione una opción</option>
+                                        <option value="Dueño o Representante Legal">Dueño o Representante Legal</option>
+                                        <option value="Socio o Accionista">Socio o Accionista</option>
+                                        <option value="Colaborador/Empleado">Colaborador/Empleado</option>
                                         <option value="Funcionario de Gobierno">Funcionario de Gobierno</option>
-                                        <option value="Empresario">Empresario</option>
-                                        <option value="Empleado">Empleado</option>
-                                        <option value="Estudiante">Estudiante</option>
-                                        <option value="Consultor">Consultor</option>
-                                        <option value="Académico">Académico</option>
-                                        <option value="Periodista">Periodista</option>
-                                        <option value="Invitado especial">Invitado especial</option>
-                                        <option value="Otro">Otro</option>
+                                        <option value="Invitado General">Invitado General</option>
                                     </select>
                                 </div>
                                 
@@ -186,20 +185,32 @@ $telefono = $_GET['telefono'] ?? '';
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const telefonoInput = document.getElementById('telefono');
+    const emailInput = document.getElementById('email');
     const eventSlug = telefonoInput.dataset.eventSlug;
     
     // Auto-buscar datos cuando se ingrese el teléfono
-    let timeout;
+    let timeoutPhone;
     telefonoInput.addEventListener('input', function() {
         // Solo números
         this.value = this.value.replace(/\D/g, '');
         
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
+        clearTimeout(timeoutPhone);
+        timeoutPhone = setTimeout(() => {
             if (this.value.length >= 10 && CANACO.validation.validatePhone(this.value)) {
                 CANACO.registration.searchByPhone(this.value, eventSlug);
             }
         }, 500);
+    });
+    
+    // Auto-buscar datos cuando se ingrese el email
+    let timeoutEmail;
+    emailInput.addEventListener('input', function() {
+        clearTimeout(timeoutEmail);
+        timeoutEmail = setTimeout(() => {
+            if (this.value.length > 5 && CANACO.validation.validateEmail(this.value)) {
+                CANACO.registration.searchByEmail(this.value, eventSlug);
+            }
+        }, 800);
     });
     
     // Validación de teléfono en tiempo real
@@ -218,18 +229,56 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Mostrar/ocultar campo de cargo gubernamental
+    // Función para mostrar/ocultar campos según ocupación
+    function toggleFieldsVisibility(ocupacion) {
+        const fieldsToHide = [
+            'fecha_nacimiento',
+            'cargo_gubernamental'
+        ];
+        
+        const fieldsToHideElements = fieldsToHide.map(id => {
+            const element = document.getElementById(id);
+            return element ? element.closest('.col-md-6') || element.parentNode : null;
+        }).filter(el => el !== null);
+        
+        if (ocupacion === 'Funcionario de Gobierno' || ocupacion === 'Invitado General') {
+            // Para estos casos, ocultar campos adicionales
+            fieldsToHideElements.forEach(el => {
+                el.style.display = 'none';
+                const input = el.querySelector('input, select');
+                if (input) input.required = false;
+            });
+            
+            // Para Funcionario de Gobierno, mostrar campo de cargo gubernamental
+            if (ocupacion === 'Funcionario de Gobierno') {
+                const cargoDiv = document.getElementById('cargo_gubernamental').parentNode;
+                cargoDiv.style.display = 'block';
+                document.getElementById('cargo_gubernamental').required = true;
+            }
+        } else {
+            // Para otros casos, mostrar todos los campos
+            fieldsToHideElements.forEach(el => {
+                el.style.display = 'block';
+            });
+            
+            // Ocultar cargo gubernamental para no funcionarios
+            const cargoDiv = document.getElementById('cargo_gubernamental').parentNode;
+            cargoDiv.style.display = 'none';
+            document.getElementById('cargo_gubernamental').required = false;
+        }
+    }
+    
+    // Mostrar/ocultar campos según ocupación
     const ocupacionSelect = document.getElementById('ocupacion');
     const cargoGubernamentalDiv = document.getElementById('cargo_gubernamental').parentNode;
     
     ocupacionSelect.addEventListener('change', function() {
-        if (this.value === 'Funcionario de Gobierno') {
-            cargoGubernamentalDiv.style.display = 'block';
-            document.getElementById('cargo_gubernamental').required = true;
-        } else {
-            cargoGubernamentalDiv.style.display = 'block'; // Mantener visible según mockup
-            document.getElementById('cargo_gubernamental').required = false;
-        }
+        toggleFieldsVisibility(this.value);
     });
+    
+    // Inicializar visibilidad en carga de página
+    if (ocupacionSelect.value) {
+        toggleFieldsVisibility(ocupacionSelect.value);
+    }
 });
 </script>
