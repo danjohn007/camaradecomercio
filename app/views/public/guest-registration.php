@@ -2,6 +2,7 @@
 $pageTitle = 'Registro de Invitado - ' . htmlspecialchars($evento['titulo']); 
 $telefono = $_GET['telefono'] ?? '';
 $email = $_GET['email'] ?? '';
+$rfc = $_GET['rfc'] ?? '';
 ?>
 
 <div class="container-fluid py-4" style="background-color: #f8f9fa;">
@@ -62,12 +63,6 @@ $email = $_GET['email'] ?? '';
                                            value="<?php echo htmlspecialchars($telefono); ?>"
                                            data-event-slug="<?php echo $evento['slug']; ?>"
                                            placeholder="Teléfono (10 dígitos)">
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <label for="fecha_nacimiento" class="form-label">Fecha de nacimiento (opcional)</label>
-                                    <input type="date" class="form-control form-control-lg" id="fecha_nacimiento" 
-                                           name="fecha_nacimiento">
                                 </div>
                                 
                                 <div class="col-md-6">
@@ -182,11 +177,90 @@ $email = $_GET['email'] ?? '';
     </div>
 </div>
 
+<!-- Modal para usuario existente -->
+<div class="modal fade" id="existingUserModal" tabindex="-1" aria-labelledby="existingUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="existingUserModalLabel">
+                    <i class="fas fa-user-check me-2"></i>
+                    Usuario encontrado
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Encontramos un registro previo con estos datos. ¿Qué desea hacer?
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-edit text-primary" style="font-size: 2rem;"></i>
+                                <h6 class="mt-3">Actualizar Información</h6>
+                                <p class="text-muted small">Modificar mis datos personales antes de obtener el boleto</p>
+                                <button type="button" class="btn btn-primary" onclick="updateUserInfo()">
+                                    <i class="fas fa-edit me-2"></i>
+                                    Actualizar datos
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-ticket-alt text-success" style="font-size: 2rem;"></i>
+                                <h6 class="mt-3">Solicitar Boleto</h6>
+                                <p class="text-muted small">Usar mis datos actuales y obtener el boleto directamente</p>
+                                <button type="button" class="btn btn-success" onclick="requestTicketDirectly()">
+                                    <i class="fas fa-ticket-alt me-2"></i>
+                                    Obtener boleto
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <strong>Datos encontrados:</strong>
+                        <div id="foundUserData" class="mt-2"></div>
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const telefonoInput = document.getElementById('telefono');
     const emailInput = document.getElementById('email');
     const eventSlug = telefonoInput.dataset.eventSlug;
+    
+    // Auto-search on page load if parameters are provided
+    const urlParams = new URLSearchParams(window.location.search);
+    const phoneParam = urlParams.get('telefono');
+    const emailParam = urlParams.get('email');
+    const rfcParam = urlParams.get('rfc');
+    
+    // Perform automatic search based on URL parameters
+    if (phoneParam && phoneParam.length >= 10) {
+        CANACO.registration.searchByPhone(phoneParam, eventSlug);
+    } else if (emailParam && emailParam.length > 5) {
+        CANACO.registration.searchByEmail(emailParam, eventSlug);
+    } else if (rfcParam && rfcParam.length >= 12) {
+        // For RFC, search in company database but allow registration as guest
+        CANACO.registration.searchByRFC(rfcParam, eventSlug);
+    }
     
     // Auto-buscar datos cuando se ingrese el teléfono
     let timeoutPhone;
@@ -232,7 +306,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Función para mostrar/ocultar campos según ocupación
     function toggleFieldsVisibility(ocupacion) {
         const fieldsToHide = [
-            'fecha_nacimiento',
             'cargo_gubernamental'
         ];
         
@@ -280,5 +353,44 @@ document.addEventListener('DOMContentLoaded', function() {
     if (ocupacionSelect.value) {
         toggleFieldsVisibility(ocupacionSelect.value);
     }
+    
+    // Función para actualizar información del usuario
+    window.updateUserInfo = function() {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('existingUserModal'));
+        modal.hide();
+        // Los campos ya están pre-llenados, el usuario puede editarlos
+        CANACO.utils.showAlert('Puede actualizar sus datos y luego enviar el formulario', 'info');
+    };
+    
+    // Función para solicitar boleto directamente
+    window.requestTicketDirectly = function() {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('existingUserModal'));
+        modal.hide();
+        
+        // Enviar formulario automáticamente con los datos existentes
+        const form = document.querySelector('form[action*="registro-invitado"]');
+        if (form) {
+            // Mostrar confirmación antes de enviar
+            if (confirm('¿Confirma que desea obtener el boleto con los datos mostrados?')) {
+                form.submit();
+            }
+        }
+    };
+    
+    // Función para mostrar modal de usuario existente
+    window.showExistingUserModal = function(userData) {
+        const foundUserDataDiv = document.getElementById('foundUserData');
+        foundUserDataDiv.innerHTML = `
+            <div class="bg-light p-2 rounded">
+                <strong>Nombre:</strong> ${userData.nombre_completo || 'N/A'}<br>
+                <strong>Email:</strong> ${userData.email || 'N/A'}<br>
+                <strong>Teléfono:</strong> ${userData.telefono || 'N/A'}<br>
+                <strong>Ocupación:</strong> ${userData.ocupacion || 'N/A'}
+            </div>
+        `;
+        
+        const modal = new bootstrap.Modal(document.getElementById('existingUserModal'));
+        modal.show();
+    };
 });
 </script>
