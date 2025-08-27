@@ -262,19 +262,32 @@ const CANACO = {
             .then(data => {
                 if (data.found) {
                     if (data.tipo === 'invitado' && data.invitado) {
-                        // Mostrar modal para decidir acción
-                        if (typeof window.showExistingUserModal === 'function') {
-                            window.showExistingUserModal(data.invitado);
-                        }
-                        
                         // Pre-llenar formulario con datos de invitado
                         CANACO.registration.setFieldValue('nombre_completo', data.invitado.nombre_completo);
                         CANACO.registration.setFieldValue('telefono', data.invitado.telefono);
                         CANACO.registration.setFieldValue('ocupacion', data.invitado.ocupacion);
+                        CANACO.registration.setFieldValue('puesto', data.invitado.ocupacion);
                         CANACO.registration.setFieldValue('cargo_gubernamental', data.invitado.cargo_gubernamental);
+                        
+                        CANACO.utils.showAlert('✓ Datos encontrados y pre-cargados desde registros anteriores', 'success');
                     } else if (data.tipo === 'empresa' && data.representante) {
-                        // Si es email de empresa, mostrar información
-                        CANACO.utils.showAlert('📋 Este email pertenece a una empresa registrada. Complete el formulario con sus datos personales para registrarse como invitado.', 'info');
+                        // Pre-llenar con datos del representante de la empresa
+                        CANACO.registration.setFieldValue('nombre_completo', data.representante.nombre_completo);
+                        CANACO.registration.setFieldValue('telefono', data.representante.telefono);
+                        CANACO.registration.setFieldValue('puesto', data.representante.puesto || 'Dueño o Representante Legal');
+                        
+                        // Si hay datos de empresa asociados, precargar algunos campos
+                        if (data.representante.rfc) {
+                            CANACO.registration.setFieldValue('rfc', data.representante.rfc);
+                        }
+                        if (data.representante.razon_social) {
+                            CANACO.registration.setFieldValue('razon_social', data.representante.razon_social);
+                        }
+                        if (data.representante.nombre_comercial) {
+                            CANACO.registration.setFieldValue('nombre_comercial', data.representante.nombre_comercial);
+                        }
+                        
+                        CANACO.utils.showAlert('✓ Datos encontrados y pre-cargados desde registros anteriores', 'success');
                     }
                 } else {
                     CANACO.utils.showAlert('ℹ Email no encontrado en registros anteriores. Puedes continuar con el registro.', 'info');
