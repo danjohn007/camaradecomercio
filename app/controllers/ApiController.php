@@ -136,7 +136,6 @@ class ApiController extends BaseController {
         $direccionComercial = trim($_POST['direccion_comercial'] ?? '');
         $giroComercial = $_POST['giro_comercial'] ?? '';
         $telefonoOficina = trim($_POST['telefono_oficina'] ?? '');
-        $aniversario = $_POST['aniversario'] ?? null;
         $numeroAfiliacion = trim($_POST['numero_afiliacion'] ?? '');
         $aceptaTerminos = isset($_POST['acepta_terminos']);
         $consejeroCanaco = isset($_POST['consejero_camara']);

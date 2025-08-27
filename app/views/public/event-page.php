@@ -206,15 +206,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const isPhone = /^[0-9]{10}$/.test(query.replace(/\D/g, ''));
         
         if (isEmail) {
-            // Redirect to registration with email
-            window.location.href = `<?php echo BASE_URL; ?>registro/invitado/${eventSlug}?email=${encodeURIComponent(query)}`;
+            // Redirect to company registration with email
+            window.location.href = `<?php echo BASE_URL; ?>registro/empresa/${eventSlug}?email=${encodeURIComponent(query)}`;
         } else if (isPhone) {
-            // Redirect to registration with phone
+            // Redirect to company registration with phone
             const phoneOnly = query.replace(/\D/g, '');
-            window.location.href = `<?php echo BASE_URL; ?>registro/invitado/${eventSlug}?telefono=${encodeURIComponent(phoneOnly)}`;
+            window.location.href = `<?php echo BASE_URL; ?>registro/empresa/${eventSlug}?telefono=${encodeURIComponent(phoneOnly)}`;
         } else if (query.length >= 12) {
-            // Assume it's RFC - redirect to registration with RFC
-            window.location.href = `<?php echo BASE_URL; ?>registro/invitado/${eventSlug}?rfc=${encodeURIComponent(query.toUpperCase())}`;
+            // Assume it's RFC - redirect to company registration with RFC
+            window.location.href = `<?php echo BASE_URL; ?>registro/empresa/${eventSlug}?rfc=${encodeURIComponent(query.toUpperCase())}`;
         } else {
             alert('Por favor ingrese un teléfono (10 dígitos), correo electrónico o RFC válido');
         }

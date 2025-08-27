@@ -1,6 +1,8 @@
 <?php 
 $pageTitle = 'Registro de Empresa - ' . htmlspecialchars($evento['titulo']); 
 $rfc = $_GET['rfc'] ?? '';
+$telefono = $_GET['telefono'] ?? '';
+$email = $_GET['email'] ?? '';
 ?>
 
 <div class="container-fluid py-4" style="background-color: #f8f9fa;">
@@ -47,7 +49,9 @@ $rfc = $_GET['rfc'] ?? '';
                                 <div class="col-md-6">
                                     <label for="email" class="form-label">Correo electrónico *</label>
                                     <input type="email" class="form-control form-control-lg" id="email" 
-                                           name="email" required placeholder="Ingresa tu correo electrónico">
+                                           name="email" required placeholder="Ingresa tu correo electrónico"
+                                           value="<?php echo htmlspecialchars($email); ?>"
+                                           data-event-slug="<?php echo $evento['slug']; ?>">
                                 </div>
                                 
                                 <div class="col-md-6">
@@ -65,7 +69,9 @@ $rfc = $_GET['rfc'] ?? '';
                                 <div class="col-md-6">
                                     <label for="telefono" class="form-label">Teléfono (opcional)</label>
                                     <input type="tel" class="form-control form-control-lg" id="telefono" 
-                                           name="telefono" placeholder="10 dígitos">
+                                           name="telefono" placeholder="10 dígitos"
+                                           value="<?php echo htmlspecialchars($telefono); ?>"
+                                           data-event-slug="<?php echo $evento['slug']; ?>">
                                 </div>
                             </div>
                             
@@ -124,12 +130,6 @@ $rfc = $_GET['rfc'] ?? '';
                                            name="telefono_oficina" placeholder="Número de teléfono de su empresa">
                                 </div>
                                 
-                                <div class="col-md-6">
-                                    <label for="aniversario" class="form-label">Aniversario (opcional)</label>
-                                    <input type="date" class="form-control form-control-lg" id="aniversario" 
-                                           name="aniversario">
-                                </div>
-                                
                                 <div class="col-12">
                                     <label for="numero_afiliacion" class="form-label">Número de afiliación (opcional)</label>
                                     <input type="text" class="form-control form-control-lg" id="numero_afiliacion" 
@@ -179,7 +179,24 @@ $rfc = $_GET['rfc'] ?? '';
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const rfcInput = document.getElementById('rfc');
+    const emailInput = document.getElementById('email');
+    const telefonoInput = document.getElementById('telefono');
     const eventSlug = rfcInput.dataset.eventSlug;
+    
+    // Auto-search on page load if parameters are provided
+    const urlParams = new URLSearchParams(window.location.search);
+    const phoneParam = urlParams.get('telefono');
+    const emailParam = urlParams.get('email');
+    const rfcParam = urlParams.get('rfc');
+    
+    // Perform automatic search based on URL parameters
+    if (phoneParam && phoneParam.length >= 10) {
+        CANACO.registration.searchByPhone(phoneParam, eventSlug);
+    } else if (emailParam && emailParam.length > 5) {
+        CANACO.registration.searchByEmail(emailParam, eventSlug);
+    } else if (rfcParam && rfcParam.length >= 12) {
+        CANACO.registration.searchByRFC(rfcParam, eventSlug);
+    }
     
     // Auto-buscar datos cuando se ingrese el RFC
     let timeout;
@@ -190,6 +207,31 @@ document.addEventListener('DOMContentLoaded', function() {
         timeout = setTimeout(() => {
             if (this.value.length >= 12 && CANACO.validation.validateRFC(this.value)) {
                 CANACO.registration.searchByRFC(this.value, eventSlug);
+            }
+        }, 500);
+    });
+    
+    // Auto-buscar datos cuando se ingrese el email
+    let timeoutEmail;
+    emailInput.addEventListener('input', function() {
+        clearTimeout(timeoutEmail);
+        timeoutEmail = setTimeout(() => {
+            if (this.value.length > 5 && CANACO.validation.validateEmail(this.value)) {
+                CANACO.registration.searchByEmail(this.value, eventSlug);
+            }
+        }, 800);
+    });
+    
+    // Auto-buscar datos cuando se ingrese el teléfono
+    let timeoutPhone;
+    telefonoInput.addEventListener('input', function() {
+        // Solo números
+        this.value = this.value.replace(/\D/g, '');
+        
+        clearTimeout(timeoutPhone);
+        timeoutPhone = setTimeout(() => {
+            if (this.value.length >= 10 && CANACO.validation.validatePhone(this.value)) {
+                CANACO.registration.searchByPhone(this.value, eventSlug);
             }
         }, 500);
     });
@@ -209,6 +251,72 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.remove('is-invalid');
         }
     });
+    
+    // Función para mostrar/ocultar campos según puesto/ocupación
+    function toggleFieldsVisibility(puesto) {
+        // Campos de empresa que se ocultan para Funcionario de Gobierno e Invitado General
+        const empresaFieldIds = [
+            'rfc', 'nombre_comercial', 'razon_social', 'direccion_comercial', 
+            'giro_comercial', 'direccion_fiscal', 'telefono_oficina', 
+            'numero_afiliacion', 'consejero_camara'
+        ];
+        
+        const empresaFields = empresaFieldIds.map(id => {
+            const element = document.getElementById(id);
+            return element ? element.closest('.col-md-6, .col-12') || element.parentNode : null;
+        }).filter(el => el !== null);
+        
+        // También buscar el título de "Datos de la empresa"
+        const empresaSection = document.querySelector('h4.text-canaco');
+        const empresaHr = empresaSection ? empresaSection.nextElementSibling : null;
+        
+        if (puesto === 'Funcionario de Gobierno' || puesto === 'Invitado General') {
+            // Ocultar todos los campos de empresa
+            empresaFields.forEach(el => {
+                el.style.display = 'none';
+                const input = el.querySelector('input, select, textarea');
+                if (input) {
+                    input.required = false;
+                    input.value = '';
+                }
+            });
+            
+            // Ocultar título de sección de empresa
+            if (empresaSection) empresaSection.style.display = 'none';
+            if (empresaHr) empresaHr.style.display = 'none';
+            
+            // Mantener solo campos básicos: nombre, email, teléfono
+            CANACO.utils.showAlert('Formulario simplificado: Solo necesita completar nombre, correo y WhatsApp.', 'info');
+        } else {
+            // Mostrar todos los campos de empresa
+            empresaFields.forEach(el => {
+                el.style.display = 'block';
+            });
+            
+            // Mostrar título de sección de empresa
+            if (empresaSection) empresaSection.style.display = 'block';
+            if (empresaHr) empresaHr.style.display = 'block';
+            
+            // Restaurar campos requeridos
+            document.getElementById('rfc').required = true;
+            document.getElementById('nombre_comercial').required = true;
+            document.getElementById('razon_social').required = true;
+            document.getElementById('giro_comercial').required = true;
+        }
+    }
+    
+    // Event listener para cambio de puesto
+    const puestoSelect = document.getElementById('puesto');
+    if (puestoSelect) {
+        puestoSelect.addEventListener('change', function() {
+            toggleFieldsVisibility(this.value);
+        });
+        
+        // Aplicar configuración inicial si ya hay un valor seleccionado
+        if (puestoSelect.value) {
+            toggleFieldsVisibility(puestoSelect.value);
+        }
+    }
     
     // Formato de teléfonos
     document.querySelectorAll('input[type="tel"]').forEach(input => {
