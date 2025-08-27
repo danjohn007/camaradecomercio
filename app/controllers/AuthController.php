@@ -47,7 +47,15 @@ class AuthController extends BaseController {
     
     public function logout() {
         if (isset($_SESSION['user_id'])) {
-            $this->logActivity('logout', 'Usuario cerró sesión');
+            // Verificar que el usuario existe en la tabla usuarios antes de registrar la actividad
+            $user = $this->db->fetch(
+                "SELECT id FROM usuarios WHERE id = ? AND activo = 1",
+                [$_SESSION['user_id']]
+            );
+            
+            if ($user) {
+                $this->logActivity('logout', 'Usuario cerró sesión');
+            }
         }
         
         session_destroy();
