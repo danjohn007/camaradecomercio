@@ -305,24 +305,25 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Función para mostrar/ocultar campos según ocupación
     function toggleFieldsVisibility(ocupacion) {
-        const fieldsToHide = [
+        const allOptionalFields = [
             'cargo_gubernamental'
         ];
         
-        const fieldsToHideElements = fieldsToHide.map(id => {
+        // Obtener todos los campos opcionales
+        const fieldsToHideElements = allOptionalFields.map(id => {
             const element = document.getElementById(id);
             return element ? element.closest('.col-md-6') || element.parentNode : null;
         }).filter(el => el !== null);
         
         if (ocupacion === 'Funcionario de Gobierno' || ocupacion === 'Invitado General') {
-            // Para estos casos, ocultar campos adicionales
+            // Para Funcionario de Gobierno e Invitado General, ocultar todos los campos adicionales
             fieldsToHideElements.forEach(el => {
                 el.style.display = 'none';
                 const input = el.querySelector('input, select');
                 if (input) input.required = false;
             });
             
-            // Para Funcionario de Gobierno, mostrar campo de cargo gubernamental
+            // Para Funcionario de Gobierno, mostrar únicamente campo de cargo gubernamental
             if (ocupacion === 'Funcionario de Gobierno') {
                 const cargoDiv = document.getElementById('cargo_gubernamental').parentNode;
                 cargoDiv.style.display = 'block';

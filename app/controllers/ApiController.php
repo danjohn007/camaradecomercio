@@ -52,10 +52,10 @@ class ApiController extends BaseController {
             $this->json(['error' => 'Teléfono requerido'], 400);
         }
         
-        // Buscar invitado por teléfono
+        // Buscar invitado por teléfono o email
         $invitado = $this->db->fetch(
-            "SELECT * FROM invitados WHERE telefono = ?",
-            [$telefono]
+            "SELECT * FROM invitados WHERE telefono = ? OR email = ?",
+            [$telefono, $telefono]
         );
         
         if ($invitado) {
@@ -80,10 +80,10 @@ class ApiController extends BaseController {
             $this->json(['error' => 'Email requerido'], 400);
         }
         
-        // Buscar primero en invitados
+        // Buscar primero en invitados por email o teléfono
         $invitado = $this->db->fetch(
-            "SELECT * FROM invitados WHERE email = ?",
-            [$email]
+            "SELECT * FROM invitados WHERE email = ? OR telefono = ?",
+            [$email, $email]
         );
         
         if ($invitado) {
@@ -263,7 +263,6 @@ class ApiController extends BaseController {
         $telefono = trim($_POST['telefono'] ?? '');
         $nombreCompleto = trim($_POST['nombre_completo'] ?? '');
         $email = trim($_POST['email'] ?? '');
-        $fechaNacimiento = $_POST['fecha_nacimiento'] ?? null;
         $ocupacion = $_POST['ocupacion'] ?? '';
         $cargoGubernamental = $_POST['cargo_gubernamental'] ?? null;
         
@@ -294,23 +293,26 @@ class ApiController extends BaseController {
         try {
             $this->db->getConnection()->beginTransaction();
             
-            // Insertar o actualizar invitado
-            $invitado = $this->db->fetch("SELECT * FROM invitados WHERE telefono = ?", [$telefono]);
+            // Buscar invitado existente por teléfono o email
+            $invitado = $this->db->fetch(
+                "SELECT * FROM invitados WHERE telefono = ? OR email = ?", 
+                [$telefono, $email]
+            );
             
             if ($invitado) {
                 // Actualizar invitado existente
                 $this->db->query(
-                    "UPDATE invitados SET nombre_completo = ?, email = ?, fecha_nacimiento = ?, 
+                    "UPDATE invitados SET nombre_completo = ?, email = ?, telefono = ?, 
                      ocupacion = ?, cargo_gubernamental = ?, updated_at = NOW() WHERE id = ?",
-                    [$nombreCompleto, $email, $fechaNacimiento, $ocupacion, $cargoGubernamental, $invitado['id']]
+                    [$nombreCompleto, $email, $telefono, $ocupacion, $cargoGubernamental, $invitado['id']]
                 );
                 $invitadoId = $invitado['id'];
             } else {
                 // Insertar nuevo invitado
                 $this->db->query(
-                    "INSERT INTO invitados (telefono, nombre_completo, email, fecha_nacimiento, ocupacion, cargo_gubernamental) 
-                     VALUES (?, ?, ?, ?, ?, ?)",
-                    [$telefono, $nombreCompleto, $email, $fechaNacimiento, $ocupacion, $cargoGubernamental]
+                    "INSERT INTO invitados (telefono, nombre_completo, email, ocupacion, cargo_gubernamental) 
+                     VALUES (?, ?, ?, ?, ?)",
+                    [$telefono, $nombreCompleto, $email, $ocupacion, $cargoGubernamental]
                 );
                 $invitadoId = $this->db->lastInsertId();
             }
