@@ -80,62 +80,76 @@ class ApiController extends BaseController {
             $this->json(['error' => 'Teléfono requerido'], 400);
         }
         
-        $resultados = [];
-        
-        // 1. Buscar en tabla invitados
-        $invitado = $this->db->fetch(
-            "SELECT *, 'invitado' as tipo_fuente, created_at as fecha_registro FROM invitados WHERE telefono = ?",
-            [$telefono]
-        );
-        if ($invitado) {
-            $resultados[] = $invitado;
-        }
-        
-        // 2. Buscar en tabla representantes (con datos de empresa)
-        $representante = $this->db->fetch(
-            "SELECT r.*, e.rfc, e.razon_social, e.nombre_comercial, e.direccion_fiscal, 
-                    e.direccion_comercial, e.telefono_oficina, e.giro_comercial, e.numero_afiliacion,
-                    'representante' as tipo_fuente, r.created_at as fecha_registro
-             FROM representantes r 
-             INNER JOIN empresas e ON r.empresa_id = e.id 
-             WHERE r.telefono = ?",
-            [$telefono]
-        );
-        if ($representante) {
-            $resultados[] = $representante;
-        }
-        
-        // 3. Buscar en tabla empresas por teléfono de oficina
-        $empresa = $this->db->fetch(
-            "SELECT e.*, 'empresa' as tipo_fuente, e.created_at as fecha_registro,
-                    r.nombre_completo, r.email, r.telefono, r.puesto
+        // 1. PRIORIDAD: Buscar en tabla EMPRESAS primero
+        // 1a. Buscar empresa por teléfono de oficina con representante
+        $empresaOficina = $this->db->fetch(
+            "SELECT e.*, 'empresa_representante' as tipo_fuente, e.created_at as fecha_registro,
+                    r.id as representante_id, r.nombre_completo, r.email, r.telefono, r.puesto
              FROM empresas e 
              LEFT JOIN representantes r ON e.id = r.empresa_id AND r.es_contacto_principal = 1
              WHERE e.telefono_oficina = ?",
             [$telefono]
         );
-        if ($empresa) {
-            $resultados[] = $empresa;
-        }
         
-        // Si encontramos resultados, devolver el más reciente
-        if (!empty($resultados)) {
-            // Ordenar por fecha de creación descendente (más reciente primero)
-            usort($resultados, function($a, $b) {
-                return strtotime($b['fecha_registro']) - strtotime($a['fecha_registro']);
-            });
-            
-            $registro_mas_reciente = $resultados[0];
-            
+        if ($empresaOficina && $empresaOficina['representante_id']) {
+            // Empresa con representante encontrada
             $this->json([
                 'found' => true,
-                'tipo' => $registro_mas_reciente['tipo_fuente'],
-                'data' => $registro_mas_reciente,
-                'total_encontrados' => count($resultados)
+                'tipo' => 'empresa_representante',
+                'data' => $empresaOficina,
+                'total_encontrados' => 1
             ]);
-        } else {
-            $this->json(['found' => false]);
+            return;
         }
+        
+        // 1b. Buscar empresa por teléfono del representante
+        $empresaRepresentante = $this->db->fetch(
+            "SELECT e.*, r.*, 'empresa_representante' as tipo_fuente, r.created_at as fecha_registro
+             FROM representantes r 
+             INNER JOIN empresas e ON r.empresa_id = e.id 
+             WHERE r.telefono = ?",
+            [$telefono]
+        );
+        
+        if ($empresaRepresentante) {
+            // Empresa con representante encontrada
+            $this->json([
+                'found' => true,
+                'tipo' => 'empresa_representante',
+                'data' => $empresaRepresentante,
+                'total_encontrados' => 1
+            ]);
+            return;
+        }
+        
+        // 1c. Buscar solo empresa (sin representante activo)
+        if ($empresaOficina && !$empresaOficina['representante_id']) {
+            $this->json([
+                'found' => true,
+                'tipo' => 'empresa',
+                'data' => $empresaOficina,
+                'total_encontrados' => 1
+            ]);
+            return;
+        }
+        
+        // 2. Si no se encuentra en EMPRESAS, buscar en tabla INVITADOS
+        $invitado = $this->db->fetch(
+            "SELECT *, 'invitado' as tipo_fuente, created_at as fecha_registro FROM invitados WHERE telefono = ?",
+            [$telefono]
+        );
+        
+        if ($invitado) {
+            $this->json([
+                'found' => true,
+                'tipo' => 'invitado',
+                'data' => $invitado,
+                'total_encontrados' => 1
+            ]);
+            return;
+        }
+        
+        $this->json(['found' => false]);
     }
     
     public function buscarPorEmail() {
@@ -150,34 +164,37 @@ class ApiController extends BaseController {
             $this->json(['error' => 'Email requerido'], 400);
         }
         
-        // Buscar primero en invitados por email o teléfono
+        // 1. PRIORIDAD: Buscar en tabla EMPRESAS primero por email del representante
+        $empresaRepresentante = $this->db->fetch(
+            "SELECT e.*, r.*, 'empresa_representante' as tipo_fuente, r.created_at as fecha_registro
+             FROM representantes r 
+             INNER JOIN empresas e ON r.empresa_id = e.id 
+             WHERE r.email = ?",
+            [$email]
+        );
+        
+        if ($empresaRepresentante) {
+            $this->json([
+                'found' => true,
+                'tipo' => 'empresa_representante',
+                'data' => $empresaRepresentante,
+                'total_encontrados' => 1
+            ]);
+            return;
+        }
+        
+        // 2. Si no se encuentra en EMPRESAS, buscar en tabla INVITADOS
         $invitado = $this->db->fetch(
-            "SELECT * FROM invitados WHERE email = ? OR telefono = ?",
-            [$email, $email]
+            "SELECT *, 'invitado' as tipo_fuente, created_at as fecha_registro FROM invitados WHERE email = ?",
+            [$email]
         );
         
         if ($invitado) {
             $this->json([
                 'found' => true,
                 'tipo' => 'invitado',
-                'invitado' => $invitado
-            ]);
-            return;
-        }
-        
-        // Buscar en representantes de empresas
-        $representante = $this->db->fetch(
-            "SELECT r.*, e.razon_social, e.rfc FROM representantes r 
-             INNER JOIN empresas e ON r.empresa_id = e.id 
-             WHERE r.email = ?",
-            [$email]
-        );
-        
-        if ($representante) {
-            $this->json([
-                'found' => true,
-                'tipo' => 'empresa',
-                'representante' => $representante
+                'data' => $invitado,
+                'total_encontrados' => 1
             ]);
             return;
         }
