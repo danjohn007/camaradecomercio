@@ -82,13 +82,17 @@ class ApiController extends BaseController {
         
         $resultados = [];
         
-        // 1. Buscar en tabla invitados
-        $invitado = $this->db->fetch(
-            "SELECT *, 'invitado' as tipo_fuente, created_at as fecha_registro FROM invitados WHERE telefono = ?",
+        // 1. PRIORIDAD: Buscar en tabla empresas por teléfono de oficina
+        $empresa = $this->db->fetch(
+            "SELECT e.*, 'empresa' as tipo_fuente, e.created_at as fecha_registro,
+                    r.nombre_completo, r.email, r.telefono, r.puesto
+             FROM empresas e 
+             LEFT JOIN representantes r ON e.id = r.empresa_id AND r.es_contacto_principal = 1
+             WHERE e.telefono_oficina = ?",
             [$telefono]
         );
-        if ($invitado) {
-            $resultados[] = $invitado;
+        if ($empresa) {
+            $resultados[] = $empresa;
         }
         
         // 2. Buscar en tabla representantes (con datos de empresa)
@@ -105,17 +109,13 @@ class ApiController extends BaseController {
             $resultados[] = $representante;
         }
         
-        // 3. Buscar en tabla empresas por teléfono de oficina
-        $empresa = $this->db->fetch(
-            "SELECT e.*, 'empresa' as tipo_fuente, e.created_at as fecha_registro,
-                    r.nombre_completo, r.email, r.telefono, r.puesto
-             FROM empresas e 
-             LEFT JOIN representantes r ON e.id = r.empresa_id AND r.es_contacto_principal = 1
-             WHERE e.telefono_oficina = ?",
+        // 3. ÚLTIMO: Buscar en tabla invitados
+        $invitado = $this->db->fetch(
+            "SELECT *, 'invitado' as tipo_fuente, created_at as fecha_registro FROM invitados WHERE telefono = ?",
             [$telefono]
         );
-        if ($empresa) {
-            $resultados[] = $empresa;
+        if ($invitado) {
+            $resultados[] = $invitado;
         }
         
         // Si encontramos resultados, devolver el más reciente
@@ -150,24 +150,12 @@ class ApiController extends BaseController {
             $this->json(['error' => 'Email requerido'], 400);
         }
         
-        // Buscar primero en invitados por email o teléfono
-        $invitado = $this->db->fetch(
-            "SELECT * FROM invitados WHERE email = ? OR telefono = ?",
-            [$email, $email]
-        );
-        
-        if ($invitado) {
-            $this->json([
-                'found' => true,
-                'tipo' => 'invitado',
-                'invitado' => $invitado
-            ]);
-            return;
-        }
-        
-        // Buscar en representantes de empresas
+        // PRIORIDAD: Buscar en representantes de empresas primero
         $representante = $this->db->fetch(
-            "SELECT r.*, e.razon_social, e.rfc FROM representantes r 
+            "SELECT r.*, e.razon_social, e.rfc, e.nombre_comercial, e.direccion_fiscal, 
+                    e.direccion_comercial, e.telefono_oficina, e.giro_comercial, e.numero_afiliacion,
+                    'representante' as tipo_fuente, r.created_at as fecha_registro
+             FROM representantes r 
              INNER JOIN empresas e ON r.empresa_id = e.id 
              WHERE r.email = ?",
             [$email]
@@ -176,8 +164,23 @@ class ApiController extends BaseController {
         if ($representante) {
             $this->json([
                 'found' => true,
-                'tipo' => 'empresa',
-                'representante' => $representante
+                'tipo' => 'representante',
+                'data' => $representante
+            ]);
+            return;
+        }
+        
+        // ÚLTIMO: Buscar en invitados por email 
+        $invitado = $this->db->fetch(
+            "SELECT *, 'invitado' as tipo_fuente, created_at as fecha_registro FROM invitados WHERE email = ?",
+            [$email]
+        );
+        
+        if ($invitado) {
+            $this->json([
+                'found' => true,
+                'tipo' => 'invitado',
+                'data' => $invitado
             ]);
             return;
         }
