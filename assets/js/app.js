@@ -220,14 +220,6 @@ const CANACO = {
                     const registro = data.data;
                     let mensaje = '';
                     
-                    // Pre-llenar datos comunes
-                    if (registro.nombre_completo) {
-                        CANACO.registration.setFieldValue('nombre_completo', registro.nombre_completo);
-                    }
-                    if (registro.email) {
-                        CANACO.registration.setFieldValue('email', registro.email);
-                    }
-                    
                     // Pre-llenar datos específicos según el tipo de fuente
                     if (data.tipo === 'empresa_representante') {
                         // Empresa con representante - datos completos
@@ -237,6 +229,9 @@ const CANACO = {
                         }
                         if (registro.email) {
                             CANACO.registration.setFieldValue('email', registro.email);
+                        }
+                        if (registro.telefono) {
+                            CANACO.registration.setFieldValue('telefono', registro.telefono);
                         }
                         if (registro.puesto) {
                             CANACO.registration.setFieldValue('puesto', registro.puesto);
@@ -301,6 +296,15 @@ const CANACO = {
                         
                     } else if (data.tipo === 'invitado') {
                         // Datos de invitado
+                        if (registro.nombre_completo) {
+                            CANACO.registration.setFieldValue('nombre_completo', registro.nombre_completo);
+                        }
+                        if (registro.email) {
+                            CANACO.registration.setFieldValue('email', registro.email);
+                        }
+                        if (registro.telefono) {
+                            CANACO.registration.setFieldValue('telefono', registro.telefono);
+                        }
                         if (registro.ocupacion) {
                             CANACO.registration.setFieldValue('ocupacion', registro.ocupacion);
                             CANACO.registration.setFieldValue('puesto', registro.ocupacion);
@@ -361,16 +365,18 @@ const CANACO = {
                     const registro = data.data;
                     let mensaje = '';
                     
-                    // Pre-llenar datos comunes
-                    if (registro.nombre_completo) {
-                        CANACO.registration.setFieldValue('nombre_completo', registro.nombre_completo);
-                    }
-                    if (registro.telefono) {
-                        CANACO.registration.setFieldValue('telefono', registro.telefono);
-                    }
-                    
                     if (data.tipo === 'empresa_representante') {
                         // Empresa con representante - datos completos
+                        // Datos del representante
+                        if (registro.nombre_completo) {
+                            CANACO.registration.setFieldValue('nombre_completo', registro.nombre_completo);
+                        }
+                        if (registro.email) {
+                            CANACO.registration.setFieldValue('email', registro.email);
+                        }
+                        if (registro.telefono) {
+                            CANACO.registration.setFieldValue('telefono', registro.telefono);
+                        }
                         if (registro.puesto) {
                             CANACO.registration.setFieldValue('puesto', registro.puesto);
                         }
@@ -405,6 +411,15 @@ const CANACO = {
                         
                     } else if (data.tipo === 'invitado') {
                         // Datos de invitado
+                        if (registro.nombre_completo) {
+                            CANACO.registration.setFieldValue('nombre_completo', registro.nombre_completo);
+                        }
+                        if (registro.email) {
+                            CANACO.registration.setFieldValue('email', registro.email);
+                        }
+                        if (registro.telefono) {
+                            CANACO.registration.setFieldValue('telefono', registro.telefono);
+                        }
                         if (registro.ocupacion) {
                             CANACO.registration.setFieldValue('ocupacion', registro.ocupacion);
                             CANACO.registration.setFieldValue('puesto', registro.ocupacion);

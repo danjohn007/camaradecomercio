@@ -104,7 +104,9 @@ class ApiController extends BaseController {
         
         // 1b. Buscar empresa por teléfono del representante
         $empresaRepresentante = $this->db->fetch(
-            "SELECT e.*, r.*, 'empresa_representante' as tipo_fuente, r.created_at as fecha_registro
+            "SELECT e.rfc, e.razon_social, e.nombre_comercial, e.direccion_fiscal, 
+                    e.direccion_comercial, e.telefono_oficina, e.giro_comercial, e.numero_afiliacion,
+                    r.*, 'empresa_representante' as tipo_fuente, r.created_at as fecha_registro
              FROM representantes r 
              INNER JOIN empresas e ON r.empresa_id = e.id 
              WHERE r.telefono = ?",
@@ -166,7 +168,9 @@ class ApiController extends BaseController {
         
         // 1. PRIORIDAD: Buscar en tabla EMPRESAS primero por email del representante
         $empresaRepresentante = $this->db->fetch(
-            "SELECT e.*, r.*, 'empresa_representante' as tipo_fuente, r.created_at as fecha_registro
+            "SELECT e.rfc, e.razon_social, e.nombre_comercial, e.direccion_fiscal, 
+                    e.direccion_comercial, e.telefono_oficina, e.giro_comercial, e.numero_afiliacion,
+                    r.*, 'empresa_representante' as tipo_fuente, r.created_at as fecha_registro
              FROM representantes r 
              INNER JOIN empresas e ON r.empresa_id = e.id 
              WHERE r.email = ?",
