@@ -381,14 +381,48 @@ document.addEventListener('DOMContentLoaded', function() {
     // Función para mostrar modal de usuario existente
     window.showExistingUserModal = function(userData) {
         const foundUserDataDiv = document.getElementById('foundUserData');
-        foundUserDataDiv.innerHTML = `
+        let displayInfo = `
             <div class="bg-light p-2 rounded">
                 <strong>Nombre:</strong> ${userData.nombre_completo || 'N/A'}<br>
                 <strong>Email:</strong> ${userData.email || 'N/A'}<br>
                 <strong>Teléfono:</strong> ${userData.telefono || 'N/A'}<br>
-                <strong>Ocupación:</strong> ${userData.ocupacion || 'N/A'}
-            </div>
         `;
+        
+        // Mostrar información específica según el tipo de usuario
+        if (userData.tipo_fuente === 'empresa' || userData.rfc) {
+            displayInfo += `<strong>Tipo:</strong> Empresa<br>`;
+            if (userData.rfc) {
+                displayInfo += `<strong>RFC:</strong> ${userData.rfc}<br>`;
+            }
+            if (userData.razon_social) {
+                displayInfo += `<strong>Razón Social:</strong> ${userData.razon_social}<br>`;
+            }
+            if (userData.puesto) {
+                displayInfo += `<strong>Puesto:</strong> ${userData.puesto}<br>`;
+            }
+        } else if (userData.tipo_fuente === 'representante' || userData.empresa_id) {
+            displayInfo += `<strong>Tipo:</strong> Representante de Empresa<br>`;
+            if (userData.puesto) {
+                displayInfo += `<strong>Puesto:</strong> ${userData.puesto}<br>`;
+            }
+            if (userData.rfc) {
+                displayInfo += `<strong>RFC Empresa:</strong> ${userData.rfc}<br>`;
+            }
+            if (userData.razon_social) {
+                displayInfo += `<strong>Empresa:</strong> ${userData.razon_social}<br>`;
+            }
+        } else {
+            displayInfo += `<strong>Tipo:</strong> Invitado<br>`;
+            if (userData.ocupacion) {
+                displayInfo += `<strong>Ocupación:</strong> ${userData.ocupacion}<br>`;
+            }
+            if (userData.cargo_gubernamental) {
+                displayInfo += `<strong>Cargo:</strong> ${userData.cargo_gubernamental}<br>`;
+            }
+        }
+        
+        displayInfo += `</div>`;
+        foundUserDataDiv.innerHTML = displayInfo;
         
         const modal = new bootstrap.Modal(document.getElementById('existingUserModal'));
         modal.show();
