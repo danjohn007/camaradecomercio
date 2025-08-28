@@ -250,10 +250,6 @@ const CANACO = {
                         if (registro.puesto) {
                             CANACO.registration.setFieldValue('puesto', registro.puesto);
                         }
-                        // Insertar ocupación si está disponible
-                        if (registro.ocupacion) {
-                            CANACO.registration.setFieldValue('ocupacion', registro.ocupacion);
-                        }
                         
                         // Datos de la empresa asociada
                         if (registro.rfc) {
