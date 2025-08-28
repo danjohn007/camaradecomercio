@@ -12,7 +12,7 @@
                              style="border-radius: 10px; height: 500px; object-fit: cover;">
                     <?php else: ?>
                         <!-- Banner por defecto similar al de la imagen -->
-                        <div class="bg-canaco text-white p-5 text-center" style="border-radius: 10px; height: 500px; position: relative; overflow: hidden;">
+                        <div class="bg-canaco text-white p-5 text-center" style="border-radius: 10px; height: 700px; position: relative; overflow: hidden;">
                             <div style="position: absolute; top: 0; right: 0; width: 100%; height: 100%; background: url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><polygon fill=\"%23ffffff\" fill-opacity=\"0.1\" points=\"0,0 100,0 70,100 0,100\"/></svg>') no-repeat; background-size: cover;"></div>
                             <div class="position-relative h-100 d-flex flex-column justify-content-center">
                                 <div class="mb-4">
@@ -100,7 +100,7 @@
                                 <div class="col-12">
                                     <div class="input-group input-group-lg">
                                         <input type="text" class="form-control form-control-lg" id="searchInput" 
-                                               placeholder="Ingrese su teléfono o correo electrónico" 
+                                               placeholder="RFC si eres empresa o Teléfono si eres invitado" 
                                                data-event-slug="<?php echo $evento['slug']; ?>">
                                         <button type="button" class="btn btn-canaco" id="btnBuscar">
                                             <i class="fas fa-search me-2"></i>
@@ -116,7 +116,7 @@
                             <div class="text-center mt-3">
                                 <small class="text-muted">
                                     <i class="fas fa-info-circle me-1"></i>
-                                    Ingrese su teléfono o correo para continuar con el registro
+                                    Ingrese su RFC si eres empresa o teléfono/ correo si eres invitado para continuar con el registro
                                 </small>
                             </div>
                         </form>
