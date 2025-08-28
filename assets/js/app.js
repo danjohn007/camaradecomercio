@@ -182,7 +182,7 @@ const CANACO = {
                         CANACO.registration.setFieldValue('puesto', data.representante.puesto);
                     }
                     
-                    CANACO.utils.showAlert('✓ Datos encontrados y pre-cargados desde registros anteriores', 'success');
+                    CANACO.utils.showAlert('✓ Datos de empresa y representante encontrados y precargados desde registros anteriores', 'success');
                 } else if (rfc.length >= 12) {
                     CANACO.utils.showAlert('ℹ RFC no encontrado en registros anteriores. Puedes continuar con el registro.', 'info');
                 }
@@ -218,86 +218,18 @@ const CANACO = {
             .then(data => {
                 if (data.found && data.data) {
                     const registro = data.data;
-                    let mensaje = '';
                     
-                    // Pre-llenar datos comunes
-                    if (registro.nombre_completo) {
-                        CANACO.registration.setFieldValue('nombre_completo', registro.nombre_completo);
-                    }
-                    if (registro.email) {
-                        CANACO.registration.setFieldValue('email', registro.email);
-                    }
-                    
-                    // Pre-llenar datos específicos según el tipo de fuente y establecer mensaje estándar
-                    if (data.tipo === 'empresa') {
-                        // PRIORIDAD: Datos de empresa con contacto principal
-                        if (registro.rfc) {
-                            CANACO.registration.setFieldValue('rfc', registro.rfc);
+                    // Para búsqueda por teléfono, SOLO precargar datos de invitado
+                    if (data.tipo === 'invitado') {
+                        // Pre-llenar datos comunes
+                        if (registro.nombre_completo) {
+                            CANACO.registration.setFieldValue('nombre_completo', registro.nombre_completo);
                         }
-                        if (registro.razon_social) {
-                            CANACO.registration.setFieldValue('razon_social', registro.razon_social);
-                        }
-                        if (registro.nombre_comercial) {
-                            CANACO.registration.setFieldValue('nombre_comercial', registro.nombre_comercial);
-                        }
-                        if (registro.direccion_fiscal) {
-                            CANACO.registration.setFieldValue('direccion_fiscal', registro.direccion_fiscal);
-                        }
-                        if (registro.direccion_comercial) {
-                            CANACO.registration.setFieldValue('direccion_comercial', registro.direccion_comercial);
-                        }
-                        if (registro.telefono_oficina) {
-                            CANACO.registration.setFieldValue('telefono_oficina', registro.telefono_oficina);
-                        }
-                        if (registro.giro_comercial) {
-                            CANACO.registration.setFieldValue('giro_comercial', registro.giro_comercial);
-                        }
-                        if (registro.numero_afiliacion) {
-                            CANACO.registration.setFieldValue('numero_afiliacion', registro.numero_afiliacion);
+                        if (registro.email) {
+                            CANACO.registration.setFieldValue('email', registro.email);
                         }
                         
-                        // Datos del contacto principal si existen
-                        if (registro.puesto) {
-                            CANACO.registration.setFieldValue('puesto', registro.puesto);
-                        }
-                        
-                        mensaje = '✓ Empresa encontrada en registros anteriores';
-                        
-                    } else if (data.tipo === 'representante') {
-                        // Datos de representante de empresa
-                        if (registro.puesto) {
-                            CANACO.registration.setFieldValue('puesto', registro.puesto);
-                        }
-                        
-                        // Datos de la empresa asociada
-                        if (registro.rfc) {
-                            CANACO.registration.setFieldValue('rfc', registro.rfc);
-                        }
-                        if (registro.razon_social) {
-                            CANACO.registration.setFieldValue('razon_social', registro.razon_social);
-                        }
-                        if (registro.nombre_comercial) {
-                            CANACO.registration.setFieldValue('nombre_comercial', registro.nombre_comercial);
-                        }
-                        if (registro.direccion_fiscal) {
-                            CANACO.registration.setFieldValue('direccion_fiscal', registro.direccion_fiscal);
-                        }
-                        if (registro.direccion_comercial) {
-                            CANACO.registration.setFieldValue('direccion_comercial', registro.direccion_comercial);
-                        }
-                        if (registro.telefono_oficina) {
-                            CANACO.registration.setFieldValue('telefono_oficina', registro.telefono_oficina);
-                        }
-                        if (registro.giro_comercial) {
-                            CANACO.registration.setFieldValue('giro_comercial', registro.giro_comercial);
-                        }
-                        if (registro.numero_afiliacion) {
-                            CANACO.registration.setFieldValue('numero_afiliacion', registro.numero_afiliacion);
-                        }
-                        mensaje = '✓ Representante de empresa encontrado en registros anteriores';
-                        
-                    } else if (data.tipo === 'invitado') {
-                        // ÚLTIMO: Datos específicos de invitado
+                        // Datos específicos de invitado
                         if (registro.ocupacion) {
                             CANACO.registration.setFieldValue('ocupacion', registro.ocupacion);
                             CANACO.registration.setFieldValue('puesto', registro.ocupacion);
@@ -305,20 +237,18 @@ const CANACO = {
                         if (registro.cargo_gubernamental) {
                             CANACO.registration.setFieldValue('cargo_gubernamental', registro.cargo_gubernamental);
                         }
-                        mensaje = '✓ Invitado encontrado en registros anteriores';
-                    }
-                    
-                    // Mostrar mensaje con información adicional si hay múltiples registros
-                    if (data.total_encontrados > 1) {
-                        mensaje += ` (${data.total_encontrados} registros encontrados, mostrando el más reciente)`;
-                    }
-                    
-                    // Mostrar modal para decidir acción PARA TODOS LOS TIPOS
-                    if (typeof window.showExistingUserModal === 'function') {
-                        window.showExistingUserModal(registro);
+                        
+                        // Mostrar modal para decidir acción
+                        if (typeof window.showExistingUserModal === 'function') {
+                            window.showExistingUserModal(registro);
+                        } else {
+                            // Fallback: mostrar alerta si no hay modal disponible
+                            CANACO.utils.showAlert('✓ Datos de invitado encontrados y precargados desde registros anteriores', 'success');
+                        }
+                        
                     } else {
-                        // Fallback: mostrar alerta si no hay modal disponible
-                        CANACO.utils.showAlert(mensaje, 'success');
+                        // Si se encuentran datos de empresa o representante, sugerir usar RFC en su lugar
+                        CANACO.utils.showAlert('ℹ Para empresas registradas, utilice la búsqueda por RFC para precargar datos completos. Puede continuar el registro manualmente.', 'info');
                     }
                     
                 } else if (telefono.length >= 10) {
@@ -356,64 +286,37 @@ const CANACO = {
             .then(data => {
                 if (data.found && data.data) {
                     const registro = data.data;
-                    let mensaje = '';
                     
-                    // Pre-llenar datos comunes
-                    if (registro.nombre_completo) {
-                        CANACO.registration.setFieldValue('nombre_completo', registro.nombre_completo);
-                    }
-                    if (registro.telefono) {
-                        CANACO.registration.setFieldValue('telefono', registro.telefono);
-                    }
-                    
-                    // Pre-llenar datos específicos según el tipo y establecer mensaje estándar
-                    if (data.tipo === 'representante') {
-                        // PRIORIDAD: Datos de representante de empresa
-                        CANACO.registration.setFieldValue('puesto', registro.puesto || 'Dueño o Representante Legal');
-                        
-                        // Datos de empresa asociados
-                        if (registro.rfc) {
-                            CANACO.registration.setFieldValue('rfc', registro.rfc);
+                    // Para búsqueda por email, SOLO precargar datos de invitado
+                    if (data.tipo === 'invitado') {
+                        // Pre-llenar datos comunes
+                        if (registro.nombre_completo) {
+                            CANACO.registration.setFieldValue('nombre_completo', registro.nombre_completo);
                         }
-                        if (registro.razon_social) {
-                            CANACO.registration.setFieldValue('razon_social', registro.razon_social);
-                        }
-                        if (registro.nombre_comercial) {
-                            CANACO.registration.setFieldValue('nombre_comercial', registro.nombre_comercial);
-                        }
-                        if (registro.direccion_fiscal) {
-                            CANACO.registration.setFieldValue('direccion_fiscal', registro.direccion_fiscal);
-                        }
-                        if (registro.direccion_comercial) {
-                            CANACO.registration.setFieldValue('direccion_comercial', registro.direccion_comercial);
-                        }
-                        if (registro.telefono_oficina) {
-                            CANACO.registration.setFieldValue('telefono_oficina', registro.telefono_oficina);
-                        }
-                        if (registro.giro_comercial) {
-                            CANACO.registration.setFieldValue('giro_comercial', registro.giro_comercial);
-                        }
-                        if (registro.numero_afiliacion) {
-                            CANACO.registration.setFieldValue('numero_afiliacion', registro.numero_afiliacion);
+                        if (registro.telefono) {
+                            CANACO.registration.setFieldValue('telefono', registro.telefono);
                         }
                         
-                        mensaje = '✓ Representante de empresa encontrado en registros anteriores';
+                        // Datos específicos de invitado
+                        if (registro.ocupacion) {
+                            CANACO.registration.setFieldValue('ocupacion', registro.ocupacion);
+                            CANACO.registration.setFieldValue('puesto', registro.ocupacion);
+                        }
+                        if (registro.cargo_gubernamental) {
+                            CANACO.registration.setFieldValue('cargo_gubernamental', registro.cargo_gubernamental);
+                        }
                         
-                    } else if (data.tipo === 'invitado') {
-                        // Datos de invitado
-                        CANACO.registration.setFieldValue('ocupacion', registro.ocupacion);
-                        CANACO.registration.setFieldValue('puesto', registro.ocupacion);
-                        CANACO.registration.setFieldValue('cargo_gubernamental', registro.cargo_gubernamental);
+                        // Mostrar modal para decidir acción
+                        if (typeof window.showExistingUserModal === 'function') {
+                            window.showExistingUserModal(registro);
+                        } else {
+                            // Fallback: mostrar alerta si no hay modal disponible
+                            CANACO.utils.showAlert('✓ Datos de invitado encontrados y precargados desde registros anteriores', 'success');
+                        }
                         
-                        mensaje = '✓ Invitado encontrado en registros anteriores';
-                    }
-                    
-                    // Mostrar modal para decidir acción PARA TODOS LOS TIPOS
-                    if (typeof window.showExistingUserModal === 'function') {
-                        window.showExistingUserModal(registro);
                     } else {
-                        // Fallback: mostrar alerta si no hay modal disponible
-                        CANACO.utils.showAlert(mensaje, 'success');
+                        // Si se encuentran datos de empresa o representante, sugerir usar RFC en su lugar
+                        CANACO.utils.showAlert('ℹ Para empresas registradas, utilice la búsqueda por RFC para precargar datos completos. Puede continuar el registro manualmente.', 'info');
                     }
                     
                 } else {
@@ -444,13 +347,13 @@ const CANACO = {
             .then(response => response.json())
             .then(data => {
                 if (data.found && data.representante) {
-                    // Pre-llenar con datos del representante de la empresa
+                    // Pre-llenar con datos del representante de la empresa para registro de invitado
                     CANACO.registration.setFieldValue('nombre_completo', data.representante.nombre_completo);
                     CANACO.registration.setFieldValue('email', data.representante.email);
                     CANACO.registration.setFieldValue('telefono', data.representante.telefono);
                     CANACO.registration.setFieldValue('ocupacion', 'Dueño o Representante Legal');
                     
-                    CANACO.utils.showAlert('📋 Datos de empresa encontrados. Complete el registro como invitado con los datos pre-llenados.', 'info');
+                    CANACO.utils.showAlert('✓ Datos de empresa encontrados. Se han precargado los datos del representante para completar el registro como invitado.', 'success');
                 } else {
                     CANACO.utils.showAlert('ℹ RFC no encontrado. Puede continuar con el registro como invitado.', 'info');
                 }
