@@ -238,7 +238,7 @@ const CANACO = {
                         if (registro.cargo_gubernamental) {
                             CANACO.registration.setFieldValue('cargo_gubernamental', registro.cargo_gubernamental);
                         }
-                        mensaje = '✓ Datos de invitado encontrados y pre-cargados desde registros anteriores';
+                        mensaje = '✓ Datos encontrados y pre-cargados desde registros anteriores';
                         
                         // Mostrar modal para decidir acción si existe la función
                         if (typeof window.showExistingUserModal === 'function') {
@@ -249,6 +249,10 @@ const CANACO = {
                         // Datos de representante de empresa
                         if (registro.puesto) {
                             CANACO.registration.setFieldValue('puesto', registro.puesto);
+                        }
+                        // Insertar ocupación si está disponible
+                        if (registro.ocupacion) {
+                            CANACO.registration.setFieldValue('ocupacion', registro.ocupacion);
                         }
                         
                         // Datos de la empresa asociada
@@ -276,7 +280,7 @@ const CANACO = {
                         if (registro.numero_afiliacion) {
                             CANACO.registration.setFieldValue('numero_afiliacion', registro.numero_afiliacion);
                         }
-                        mensaje = '✓ Datos de empresa y representante encontrados y pre-cargados desde registros anteriores';
+                        mensaje = '✓ Datos encontrados y pre-cargados desde registros anteriores';
                         
                     } else if (data.tipo === 'empresa') {
                         // Datos de empresa con contacto principal
@@ -310,7 +314,7 @@ const CANACO = {
                             CANACO.registration.setFieldValue('puesto', registro.puesto);
                         }
                         
-                        mensaje = '✓ Datos de empresa encontrados y pre-cargados desde registros anteriores';
+                        mensaje = '✓ Datos encontrados y pre-cargados desde registros anteriores';
                     }
                     
                     // Mostrar mensaje con información adicional si hay múltiples registros
