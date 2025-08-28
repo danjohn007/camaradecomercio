@@ -388,19 +388,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <strong>Teléfono:</strong> ${userData.telefono || 'N/A'}<br>
         `;
         
-        // Mostrar información específica según el tipo de usuario
-        if (userData.tipo_fuente === 'empresa' || userData.rfc) {
-            displayInfo += `<strong>Tipo:</strong> Empresa<br>`;
-            if (userData.rfc) {
-                displayInfo += `<strong>RFC:</strong> ${userData.rfc}<br>`;
-            }
-            if (userData.razon_social) {
-                displayInfo += `<strong>Razón Social:</strong> ${userData.razon_social}<br>`;
-            }
-            if (userData.puesto) {
-                displayInfo += `<strong>Puesto:</strong> ${userData.puesto}<br>`;
-            }
-        } else if (userData.tipo_fuente === 'representante' || userData.empresa_id) {
+        // Mostrar información específica según el tipo de usuario (orden de prioridad correcto)
+        if (userData.tipo_fuente === 'representante' || userData.empresa_id) {
             displayInfo += `<strong>Tipo:</strong> Representante de Empresa<br>`;
             if (userData.puesto) {
                 displayInfo += `<strong>Puesto:</strong> ${userData.puesto}<br>`;
@@ -410,6 +399,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             if (userData.razon_social) {
                 displayInfo += `<strong>Empresa:</strong> ${userData.razon_social}<br>`;
+            }
+        } else if (userData.tipo_fuente === 'empresa') {
+            displayInfo += `<strong>Tipo:</strong> Empresa<br>`;
+            if (userData.rfc) {
+                displayInfo += `<strong>RFC:</strong> ${userData.rfc}<br>`;
+            }
+            if (userData.razon_social) {
+                displayInfo += `<strong>Razón Social:</strong> ${userData.razon_social}<br>`;
+            }
+            if (userData.puesto) {
+                displayInfo += `<strong>Puesto:</strong> ${userData.puesto}<br>`;
             }
         } else {
             displayInfo += `<strong>Tipo:</strong> Invitado<br>`;
