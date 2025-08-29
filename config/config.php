@@ -10,7 +10,7 @@ define('DB_USER', 'ejercito_reservaciones');
 define('DB_PASS', 'Danjohn007');
 
 // Configuración de la aplicación
-define('BASE_URL', '/reservaciones/');
+define('BASE_URL', '/canaco/');
 define('APP_NAME', 'Sistema de Eventos CANACO');
 define('APP_VERSION', '1.0.0');
 
